@@ -26,3 +26,36 @@ func SplitByNoIndentLine(txt string) ([]string, error) {
 	)
 	return res, nil
 }
+
+func PreprocessNote(note string) string {
+	replaceMap := map[string]string{
+		"＃": "#",
+		"＆": "&",
+		"　": " ",
+		"？": "?",
+		"＠": "@",
+		"１": "1",
+		"２": "2",
+		"３": "3",
+		"４": "4",
+		"５": "5",
+		"６": "6",
+		"７": "7",
+		"８": "8",
+		"９": "9",
+	}
+	for k, v := range replaceMap {
+		note = strings.ReplaceAll(note, k, v)
+	}
+	return note
+}
+
+func SplitWithTrimAndOmitEmpty(s string, step string) []string {
+	splits := strings.Split(s, step)
+	return lo.Filter(
+		splits, func(item string, _ int) bool {
+			return len(strings.TrimSpace(item)) > 0
+		},
+	)
+
+}

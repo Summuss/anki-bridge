@@ -50,3 +50,53 @@ W2
 		)
 	}
 }
+
+func TestJPWordsParser_Check(t *testing.T) {
+	type args struct {
+		note string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "1",
+			args: args{
+				note: `- 出来事
+	- (偶发)的事件，变故。（持ち上がった事件・事柄。）
+	- できごと 2 １ 3`,
+			},
+			wantErr: false,
+		},
+		{
+			name: "2",
+			args: args{
+				note: `- 出来事
+	- (偶发)的事件，变故。（持ち上がった事件・事柄。）
+	- できごと 2 １ `,
+			},
+			wantErr: false,
+		},
+
+		{
+			name: "3",
+			args: args{
+				note: `- 出来事
+	- (偶发)的事件，变故。（持ち上がった事件・事柄。）
+	- できごと 2 １ X`,
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(
+			tt.name, func(t *testing.T) {
+				w := JPWordsParser{}
+				if err := w.Check(tt.args.note); (err != nil) != tt.wantErr {
+					t.Errorf("Check() error = %v, wantErr %v", err, tt.wantErr)
+				}
+			},
+		)
+	}
+}
