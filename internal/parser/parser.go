@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"errors"
 	"fmt"
 	"github.com/samber/lo"
 	"github.com/summuss/anki-bridge/internal/model"
@@ -26,7 +27,7 @@ func splitByNoteType(content string) (map[string]string, error) {
 	r2, _ := regexp.Compile(`(?m)^\S+?$\n`)
 	splits := r2.Split(content, -1)
 	if len(strings.TrimSpace(splits[0])) > 0 {
-		return nil, fmt.Errorf("found error near %s", splits[0])
+		return nil, fmt.Errorf("syntax error near %s", splits[0])
 	}
 	matches := r2.FindAllString(content, -1)
 
@@ -44,6 +45,10 @@ func splitByNoteType(content string) (map[string]string, error) {
 }
 
 func CheckInput(txt string) error {
+	r, _ := regexp.Compile(`(?m)\A(\s*^\S+.*(\n^\t+.*$)*)*\s*\z`)
+	if !r.MatchString(txt) {
+		return errors.New("input structure error")
+	}
 	noteTypeName2SubTxt, err := splitByNoteType(txt)
 	if err != nil {
 		return err
