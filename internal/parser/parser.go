@@ -24,7 +24,7 @@ var (
 
 func splitByNoteType(content string) (map[string]string, error) {
 	content = content + "\n"
-	r2, _ := regexp.Compile(`(?m)^\S+?$\n`)
+	r2, _ := regexp.Compile(`(?m)^\S+.*$\n`)
 	splits := r2.Split(content, -1)
 	if len(strings.TrimSpace(splits[0])) > 0 {
 		return nil, fmt.Errorf("syntax error near %s", splits[0])
@@ -114,7 +114,7 @@ func checkNotes(notes []string, p Parser) error {
 func findParser(noteName string) (Parser, error) {
 	parserFlt := lo.Filter(
 		*parsers, func(item Parser, index int) bool {
-			return item.NoteName() == noteName
+			return item.NoteName() == noteName || fmt.Sprintf("[[%s]]", item.NoteName()) == noteName
 		},
 	)
 	if len(parserFlt) < 1 {

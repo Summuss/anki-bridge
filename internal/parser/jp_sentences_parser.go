@@ -23,7 +23,7 @@ func (J JPSentencesParser) Split(rawNotes string) ([]string, error) {
 
 func (J JPSentencesParser) Check(note string) error {
 	notePreproc := util.PreprocessNote(note)
-	r, _ := regexp.Compile(`(?m)\A\s*^-\s*(?P<Sentence>.+)(?P<Words>(\n\t-\s*.+\n\t\t-\s*.+\n\t\t-\s*.+)+)\s*\z`)
+	r, _ := regexp.Compile(`(?m)\A\s*^-\s*(?P<Sentence>\S+.*$)(?P<Words>(\n^\t-\s*.+$\n^\t\t-\s*.+$\n^\t\t-\s*.+$)+)\s*\z`)
 	if !r.MatchString(notePreproc) {
 		return fmt.Errorf("note synatx error:\n%s", note)
 	}

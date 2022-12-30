@@ -13,7 +13,7 @@ func UnIndent(txt string) string {
 }
 
 func SplitByNoIndentLine(txt string) ([]string, error) {
-	r, _ := regexp.Compile(`(?m)^\S+`)
+	r, _ := regexp.Compile(`(?m)^\S+.*$`)
 	split := r.Split(txt, -1)
 	if len(strings.TrimSpace(split[0])) > 0 {
 		return nil, fmt.Errorf("error near %s", split[0])
@@ -43,6 +43,7 @@ func PreprocessNote(note string) string {
 		"７": "7",
 		"８": "8",
 		"９": "9",
+		"‎": "",
 	}
 	for k, v := range replaceMap {
 		note = strings.ReplaceAll(note, k, v)

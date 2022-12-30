@@ -31,7 +31,27 @@ W2
 `, `W2
 	2-1
 `,
-			}, wantErr: false,
+			},
+			wantErr: false,
+		},
+		{
+			name: "2", args: args{
+				txt: `
+W1
+	1-1
+	1-2
+W2 xxx
+	2-1
+`,
+			}, want: []string{
+				`W1
+	1-1
+	1-2
+`, `W2 xxx
+	2-1
+`,
+			},
+			wantErr: false,
 		},
 	}
 	for _, tt := range tests {

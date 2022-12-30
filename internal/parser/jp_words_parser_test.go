@@ -99,6 +99,17 @@ func TestJPWordsParser_Check(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "meaning contain space",
+			args: args{
+				note: `
+- 出来事
+	- (偶发)的事件，  变故。（持ち上がった事件・事柄。）
+	- できごと 2 １ 
+`,
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(

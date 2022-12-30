@@ -88,6 +88,53 @@ Word
 			want:    nil,
 			wantErr: true,
 		},
+		{
+			name: "note name contain space",
+			args: args{
+				content: `
+Word
+	W1
+		1-1
+		1-2
+	W2
+		2-1
+
+Sentence xxx
+	S1
+		1-1
+		1-2
+	S2
+		2-1
+Word
+	W3
+		3-1
+		3-2
+	W4
+		4-1
+`,
+			},
+			want: map[string]string{
+				"Word": `
+W1
+	1-1
+	1-2
+W2
+	2-1
+W3
+	3-1
+	3-2
+W4
+	4-1`,
+
+				"Sentence xxx": `
+S1
+	1-1
+	1-2
+S2
+	2-1`,
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(
