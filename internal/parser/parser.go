@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"errors"
 	"fmt"
 	"github.com/samber/lo"
 	"github.com/summuss/anki-bridge/internal/model"
@@ -19,7 +18,7 @@ type Parser interface {
 }
 
 var (
-	parsers = &[]Parser{}
+	parsers = &[]Parser{jpWordsParser, jpSentencesParser}
 )
 
 func splitByNoteType(content string) (map[string]string, error) {
@@ -81,19 +80,7 @@ func CheckInput(txt string) error {
 		}()
 	}
 	wg.Wait()
-	return mergeErrors(errList.ToSlice())
-}
-
-func mergeErrors(errList []error) error {
-	if len(errList) > 0 {
-		msg := lo.Reduce(
-			errList, func(agg string, err error, i int) string {
-				return agg + "\n" + err.Error()
-			}, "",
-		)
-		return errors.New(msg)
-	}
-	return nil
+	return util.MergeErrors(errList.ToSlice())
 }
 
 func checkNotes(notes []string, p Parser) error {
@@ -116,7 +103,7 @@ func checkNotes(notes []string, p Parser) error {
 		}()
 	}
 	wg.Wait()
-	return mergeErrors(errList.ToSlice())
+	return util.MergeErrors(errList.ToSlice())
 }
 
 func findParser(noteName string) (Parser, error) {

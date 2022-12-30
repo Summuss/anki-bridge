@@ -9,6 +9,8 @@ import (
 	"strconv"
 )
 
+var jpWordsParser = JPWordsParser{}
+
 type JPWordsParser struct {
 }
 
@@ -22,7 +24,7 @@ func (w JPWordsParser) Split(rowNotes string) ([]string, error) {
 
 func (w JPWordsParser) Check(note string) error {
 	notePreproc := util.PreprocessNote(note)
-	r, _ := regexp.Compile(`(?m)^-\s*(?P<word>\S+)\n\t-\s*(?P<meaning>\S+)\n\t-\s*(?P<hiragana>\S+)\s+(?P<pitch>\d)\s+(?P<classes>.+)`)
+	r, _ := regexp.Compile(`(?m)\A\s*^-\s*(?P<word>\S+)\n\t-\s*(?P<meaning>\S+)\n\t-\s*(?P<hiragana>\S+)\s+(?P<pitch>\d)\s+(?P<classes>.+)\s*\z`)
 	if !r.MatchString(notePreproc) {
 		return fmt.Errorf("note synatx error:\n%s", note)
 	}
