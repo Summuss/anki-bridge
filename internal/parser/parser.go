@@ -114,7 +114,7 @@ func checkNotes(notes []string, p Parser) error {
 func findParser(noteName string) (Parser, error) {
 	parserFlt := lo.Filter(
 		*parsers, func(item Parser, index int) bool {
-			return item.NoteName() == noteName || fmt.Sprintf("[[%s]]", item.NoteName()) == noteName
+			return item.NoteName() == computeRealNoteName(noteName)
 		},
 	)
 	if len(parserFlt) < 1 {
@@ -124,4 +124,11 @@ func findParser(noteName string) (Parser, error) {
 	}
 	p := parserFlt[0]
 	return p, nil
+}
+func computeRealNoteName(rowNoteName string) string {
+	r, _ := regexp.Compile(`^- \[\[(.*)]]\s*$`)
+	if !r.MatchString(rowNoteName) {
+		return rowNoteName
+	}
+	return r.FindStringSubmatch(rowNoteName)[1]
 }

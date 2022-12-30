@@ -26,18 +26,18 @@ func (w JPWordsParser) Check(note string) error {
 	notePreproc := util.PreprocessNote(note)
 	r, _ := regexp.Compile(`(?m)\A\s*^-\s*(?P<word>\S+)$\n^\t-\s*(?P<meaning>\S+.*)$\n^\t-\s*(?P<hiragana>\S+)\s+(?P<pitch>\d)\s+(?P<classes>.+)$\s*\z`)
 	if !r.MatchString(notePreproc) {
-		return fmt.Errorf("note synatx error:\n%s", note)
+		return fmt.Errorf("synatx error in word\n%s", note)
 	}
 	submatches := r.FindStringSubmatch(notePreproc)
 	classesStr := submatches[r.SubexpIndex("classes")]
 	classes := util.SplitWithTrimAndOmitEmpty(classesStr, " ")
 	if len(classes) == 0 {
-		return fmt.Errorf("word classes not found in %s", note)
+		return fmt.Errorf("word classes not found in word\n%s", note)
 	}
 	for _, class := range classes {
 		err := checkWordClass(class)
 		if err != nil {
-			return fmt.Errorf("%s. in %s", err.Error(), classesStr)
+			return fmt.Errorf("%s in word\n%s", err.Error(), note)
 		}
 	}
 	return nil

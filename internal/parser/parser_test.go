@@ -151,3 +151,178 @@ S2
 		)
 	}
 }
+
+func TestCheckInput(t *testing.T) {
+	type args struct {
+		txt string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "1",
+			args: args{
+				txt: `
+- [[Jp Sentences]]
+	- ‎原因不明の病に {{cloze 冒される}} ので
+		- 冒す
+			- 侵袭；患（病）。（害を及ぼす。）
+			- おかす　2　7
+	- 前職で重いヘルニアを {{cloze ‎患}} ってらしたみたいで
+		- 患う
+			- 患病，生病。〔病気になる。〕
+			- わずらう　0　7
+- [[Jp Words]]
+	- 出来事
+		- (偶发)的事件，变故。（持ち上がった事件・事柄。）
+		- できごと　2　１
+	- せっかち
+		- 性急；急躁（落ち着きがなく，先へ先へと急ぐ・ことさま。また，そのような性質の人。性急）。
+		- せっかち　1　3
+
+`,
+			},
+			wantErr: false,
+		},
+		{
+			name: "structure error",
+			args: args{
+				txt: `
+- [[Jp Sentences]]
+	- ‎原因不明の病に {{cloze 冒される}} ので
+		- 冒す
+			- 侵袭；患（病）。（害を及ぼす。）
+			- おかす　2　7
+	- 前職で重いヘルニアを {{cloze ‎患}} ってらしたみたいで
+		- 患う
+			- 患病，生病。〔病気になる。〕
+			- わずらう　0　7
+- [[Jp Words]]
+ abc
+`,
+			},
+			wantErr: true,
+		},
+
+		{
+			name: "note error1",
+			args: args{
+				txt: `
+- [[Jp Sentences]]
+	- ‎原因不明の病に {{cloze 冒される}} ので
+		- 冒す
+			- 侵袭；患（病）。（害を及ぼす。）
+			- おかす　2　7
+	- 前職で重いヘルニアを {{cloze ‎患}} ってらしたみたいで
+		- 患う
+			- 患病，生病。〔病気になる。〕
+			- わずらう　0　7
+- [[Jp Words]]
+	- 出来事
+		- (偶发)的事件，变故。（持ち上がった事件・事柄。）
+		- できごと　2　X
+	- せっかち
+		- 性急；急躁（落ち着きがなく，先へ先へと急ぐ・ことさま。また，そのような性質の人。性急）。
+		- せっかち　1　3
+`,
+			},
+			wantErr: true,
+		},
+		{
+			name: "note error2",
+			args: args{
+				txt: `
+- [[Jp Sentences]]
+	- ‎原因不明の病に {{cloze 冒される}} ので
+		- 冒す
+			- 侵袭；患（病）。（害を及ぼす。）
+			- おかす　2　0
+	- 前職で重いヘルニアを {{cloze ‎患}} ってらしたみたいで
+		- 患う
+			- 患病，生病。〔病気になる。〕
+			- わずらう　0　7
+- [[Jp Words]]
+	- 出来事
+		- (偶发)的事件，变故。（持ち上がった事件・事柄。）
+		- できごと　2　X
+	- せっかち
+		- 性急；急躁（落ち着きがなく，先へ先へと急ぐ・ことさま。また，そのような性質の人。性急）。
+		- せっかち　1　3
+`,
+			},
+			wantErr: true,
+		},
+		{
+			name: "empty note",
+			args: args{
+				txt: `
+- [[Jp Sentences]]
+- [[Jp Words]]
+	- 出来事
+		- (偶发)的事件，变故。（持ち上がった事件・事柄。）
+		- できごと　2　A
+	- せっかち
+		- 性急；急躁（落ち着きがなく，先へ先へと急ぐ・ことさま。また，そのような性質の人。性急）。
+		- せっかち　1　3
+`,
+			},
+			wantErr: false,
+		},
+		{
+			name: "unknown note",
+			args: args{
+				txt: `
+- [[UNKNOWN]]
+	- xxx
+- [[Jp Words]]
+	- 出来事
+		- (偶发)的事件，变故。（持ち上がった事件・事柄。）
+		- できごと　2　A
+	- せっかち
+		- 性急；急躁（落ち着きがなく，先へ先へと急ぐ・ことさま。また，そのような性質の人。性急）。
+		- せっかち　1　3
+`,
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(
+			tt.name, func(t *testing.T) {
+				err := CheckInput(tt.args.txt)
+				if (err != nil) != tt.wantErr {
+					t.Errorf("CheckInput() error = %v, wantErr %v", err, tt.wantErr)
+				}
+				if err != nil {
+					println(err.Error())
+				}
+			},
+		)
+	}
+}
+
+func Test_computeNoteName(t *testing.T) {
+	type args struct {
+		rowNoteName string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{name: "1", args: args{rowNoteName: "- [[Jp Sentences]]"}, want: "Jp Sentences"},
+		{name: "2", args: args{rowNoteName: "- [[Jp Sentences]]  "}, want: "Jp Sentences"},
+		{name: "3", args: args{rowNoteName: "JXX"}, want: "JXX"},
+	}
+	for _, tt := range tests {
+		t.Run(
+			tt.name, func(t *testing.T) {
+				if got := computeRealNoteName(tt.args.rowNoteName); got != tt.want {
+					t.Errorf("computeRealNoteName() = %v, want %v", got, tt.want)
+				}
+			},
+		)
+	}
+}
