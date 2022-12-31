@@ -46,7 +46,7 @@ func (J JPSentencesParser) Check(note string) error {
 	return util.MergeErrors(errorList)
 }
 
-func (J JPSentencesParser) Parse(note string) (model.Model, error) {
+func (J JPSentencesParser) Parse(note string) (model.model, error) {
 	//TODO implement me
 	panic("implement me")
 }

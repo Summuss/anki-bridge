@@ -43,7 +43,7 @@ func (w JPWordsParser) Check(note string) error {
 	return nil
 }
 
-func (w JPWordsParser) Parse(note string) (model.Model, error) {
+func (w JPWordsParser) Parse(note string) (model.model, error) {
 	//TODO implement me
 	panic("implement me")
 }
