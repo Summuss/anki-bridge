@@ -6,15 +6,9 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"reflect"
-	"sync"
 	"time"
 )
-
-var DB_NAME = "test"
-var _mongoClient *mongo.Client
-var _once = sync.Once{}
 
 type IDao[T IModel] interface {
 	FindById(primitive.ObjectID) (*T, error)
@@ -25,6 +19,7 @@ type IDao[T IModel] interface {
 
 type Dao[T IModel] struct {
 	Client *mongo.Client
+	DBName string
 }
 
 func (d *Dao[T]) FindById(id primitive.ObjectID) (T, error) {
@@ -39,6 +34,9 @@ func (d *Dao[T]) FindById(id primitive.ObjectID) (T, error) {
 	}
 	t = reflect.New(tt.Elem()).Interface().(T)
 	err := one.Decode(t)
+	if err != nil {
+		return t, err
+	}
 	return t, err
 }
 
@@ -115,34 +113,11 @@ func (d *Dao[T]) getCollection() *mongo.Collection {
 	if len(collectionName) == 0 {
 		panic(fmt.Sprintf("collectionName is empty for model %s", reflect.TypeOf(t)))
 	}
-	return d.Client.Database(DB_NAME).Collection(collectionName)
+	return d.Client.Database(d.DBName).Collection(collectionName)
 }
 
-func getClient() *mongo.Client {
-	_once.Do(
-		func() {
-			if _mongoClient != nil {
-				return
-			}
-			uri := fmt.Sprintf(
-				"mongodb://mongoadmin:secret@daemon:27017/%s?authSource=admin", DB_NAME,
-			)
-			var err error
-			_mongoClient, err = mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
-			if err != nil {
-				panic(err)
-			}
-		},
-	)
-	return _mongoClient
-}
-
-func GetDao[T IModel](t T) Dao[T] {
-	return Dao[T]{Client: getClient()}
-}
-
-func Disconnect() error {
-	return getClient().Disconnect(context.TODO())
+func GetDao[T IModel](client *mongo.Client, dbName string, t T) Dao[T] {
+	return Dao[T]{Client: client, DBName: dbName}
 }
 
 func ObjectIDFromHex(idStr string) primitive.ObjectID {

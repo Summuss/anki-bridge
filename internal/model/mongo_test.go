@@ -1,13 +1,28 @@
 package model
 
 import (
+	"context"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"testing"
 )
 
+var TestDB = "test"
+var mongoClient *mongo.Client
+
+func init() {
+	uri := "mongodb://mongoadmin:secret@daemon:27017/test?authSource=admin"
+	var err error
+	mongoClient, err = mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
+	if err != nil {
+		panic(err)
+	}
+}
+
 func TestDao_FindById(t *testing.T) {
-	GetDao(&UserModel{})
+	GetDao(mongoClient, TestDB, &UserModel{})
 	type args struct {
 		id primitive.ObjectID
 	}
@@ -21,7 +36,7 @@ func TestDao_FindById(t *testing.T) {
 	tests := []testCase[*UserModel]{
 		{
 			name:    "1",
-			d:       GetDao(&UserModel{}),
+			d:       GetDao(mongoClient, TestDB, &UserModel{}),
 			args:    args{ObjectIDFromHex("63b1155b63ac6ba5560e0f80")},
 			want:    &UserModel{},
 			wantErr: false,
@@ -41,6 +56,13 @@ func TestDao_FindById(t *testing.T) {
 			},
 		)
 	}
+
+	jpWordDao := GetDao(mongoClient, TestDB, &JPWord{})
+	res, err := jpWordDao.FindById(ObjectIDFromHex("6180a5d05c1e8d3bb3362f3f"))
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	println(res.CreatedTime.Time().String())
 }
 
 func TestDao_FindMany(t *testing.T) {
@@ -55,7 +77,11 @@ func TestDao_FindMany(t *testing.T) {
 		wantErr bool
 	}
 	tests := []testCase[*UserModel]{
-		{name: "1", d: GetDao(&UserModel{}), args: args{bson.D{}}, want: nil, wantErr: false},
+		{
+			name: "1", d: GetDao(mongoClient, TestDB, &UserModel{}), args: args{bson.D{}},
+			want:    nil,
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(
@@ -81,7 +107,7 @@ func TestDao_Save(t *testing.T) {
 	}
 	model2 := model1
 	model2.Age = 24
-	dao := GetDao(&UserModel{})
+	dao := GetDao(mongoClient, TestDB, &UserModel{})
 	err := dao.Save(&model1)
 	if err != nil {
 		t.Errorf(err.Error())
