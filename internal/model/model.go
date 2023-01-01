@@ -82,20 +82,25 @@ func getZeroModel() BaseModel {
 }
 
 type Resource struct {
-	Id           primitive.ObjectID `json:"_id" bson:"_id"`
+	Metadata ResourceMetadata   `json:"metadata" bson:"metadata"`
+	Id       primitive.ObjectID `json:"_id" bson:"_id"`
+	Length   int                `json:"length" bson:"length"`
+	data     []byte
+}
+
+type ResourceMetadata struct {
 	ExtName      string             `json:"ext_name" bson:"ext_name"`
 	ResourceType ResourceType       `json:"file_type" bson:"file_type"`
-	FileName     string             `json:"file_name" bson:"file_name"`
 	Collection   string             `json:"collection" bson:"collection"`
 	OwnerID      primitive.ObjectID `json:"model_id" bson:"model_id"`
-	Length       int                `json:"length" bson:"length"`
-	data         []byte
+	FileName     string             `json:"file_name" bson:"file_name"`
 }
 
 func (r Resource) toBsonM() bson.M {
 	return bson.M{
-		"ext_name": r.ExtName, "file_type": r.ResourceType,
-		"file_name": r.FileName, "collection": r.Collection, "model_id": r.OwnerID,
+		"ext_name": r.Metadata.ExtName, "file_type": r.Metadata.ResourceType,
+		"file_name": r.Metadata.FileName, "collection": r.Metadata.Collection,
+		"model_id": r.Metadata.OwnerID,
 	}
 }
 

@@ -1,6 +1,7 @@
 package model
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"github.com/summuss/anki-bridge/internal/util"
@@ -8,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/gridfs"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"reflect"
 	"time"
 )
@@ -64,6 +66,49 @@ func (d *Dao[T]) FindMany(query interface{}) (*[]T, error) {
 	)
 	return &res, err
 }
+
+func (d *Dao[T]) saveResources(t T) error {
+	if t.GetResources() == nil {
+		return nil
+	}
+
+	if t.GetResources() == nil || len(*t.GetResources()) == 0 {
+		return nil
+	}
+	ris := util.SafeList[primitive.ObjectID]{}
+	err := util.DoParallel(
+		t.GetResources(), func(r *Resource) error {
+			if len(r.Metadata.FileName) == 0 {
+				return fmt.Errorf("file name is empty")
+			}
+			if len(r.data) == 0 {
+				return fmt.Errorf("data is empty, fileName:%s", r.Metadata.FileName)
+			}
+			r.Metadata.OwnerID = t.GetID()
+			r.Length = len(r.data)
+			r.Metadata.Collection = t.collectionName()
+			metadata := options.GridFSUpload().SetMetadata(r.toBsonM())
+			db := d.Client.Database(d.DBName)
+			bucket, err := gridfs.NewBucket(db)
+			objectID, err := bucket.UploadFromStream(
+				r.Metadata.FileName, bytes.NewReader(r.data),
+				metadata,
+			)
+			if err != nil {
+				return fmt.Errorf(
+					"upload file %s failed,error:\n%s", r.Metadata.FileName, err.Error(),
+				)
+			}
+			r.Id = objectID
+			ris.Add(objectID)
+			return nil
+		},
+	)
+	ids := ris.ToSlice()
+	t.SetResourceIDs(&ids)
+	return err
+}
+
 func (d *Dao[T]) loadResources(t T) error {
 	if t.GetResourceIDs() == nil {
 		return nil
@@ -96,7 +141,8 @@ func (d *Dao[T]) loadResources(t T) error {
 				downloadStream, err := bucket.OpenDownloadStream(r.Id)
 				if err != nil {
 					return fmt.Errorf(
-						"download file %s(id=%s) failed,error:\n%s", r.FileName, r.Id.String(),
+						"download file %s(id=%s) failed,error:\n%s", r.Metadata.FileName,
+						r.Id.String(),
 						err.Error(),
 					)
 				}
@@ -104,7 +150,8 @@ func (d *Dao[T]) loadResources(t T) error {
 				_, err = downloadStream.Read(r.data)
 				if err != nil {
 					return fmt.Errorf(
-						"download file %s(id=%s) failed,error:\n%s", r.FileName, r.Id.String(),
+						"download file %s(id=%s) failed,error:\n%s", r.Metadata.FileName,
+						r.Id.String(),
 						err.Error(),
 					)
 				}
@@ -122,10 +169,9 @@ func (d *Dao[T]) Save(model T, models ...T) error {
 	var insertMs []interface{}
 	var updateMs []interface{}
 	addToGroup := func(m T) {
+		updateMs = append(updateMs, m)
 		if m.GetID().IsZero() {
 			insertMs = append(insertMs, m)
-		} else {
-			updateMs = append(updateMs, m)
 		}
 	}
 	addToGroup(model)
@@ -133,7 +179,6 @@ func (d *Dao[T]) Save(model T, models ...T) error {
 		addToGroup(m)
 	}
 
-	ctx := context.TODO()
 	callback := func(sessCtx mongo.SessionContext) (interface{}, error) {
 		now := primitive.NewDateTimeFromTime(time.Now())
 		if len(insertMs) > 0 {
@@ -141,20 +186,30 @@ func (d *Dao[T]) Save(model T, models ...T) error {
 				m.(T).SetCreatedTime(now)
 				m.(T).SetUpdateTime(now)
 			}
-			res, err := d.getCollection().InsertMany(ctx, insertMs)
+			// transaction disabled
+			res, err := d.getCollection().InsertMany(context.TODO(), insertMs)
 			if err != nil {
 				return nil, fmt.Errorf("insertMany failed, error:\n%s", err.Error())
 			}
 			for i, id := range res.InsertedIDs {
 				objectID := id.(primitive.ObjectID)
 				insertMs[i].(T).SetID(objectID)
+				println(objectID.Hex())
+			}
+			err = util.DoParallel(
+				&insertMs, func(i *interface{}) error {
+					return d.saveResources((*i).(T))
+				},
+			)
+			if err != nil {
+				return nil, err
 			}
 
 		}
 		for _, m := range updateMs {
 			id := m.(T).GetID()
 			m.(T).SetUpdateTime(now)
-			_, err := d.getCollection().ReplaceOne(ctx, bson.D{{"_id", id}}, m)
+			_, err := d.getCollection().ReplaceOne(context.TODO(), bson.D{{"_id", id}}, m)
 			if err != nil {
 				return nil, fmt.Errorf(
 					"update id=%s failed,error:\n%s", id.String(), err.Error(),
@@ -167,9 +222,10 @@ func (d *Dao[T]) Save(model T, models ...T) error {
 	if err != nil {
 		return err
 	}
-	defer session.EndSession(ctx)
-	_, err = session.WithTransaction(ctx, callback)
-	return nil
+	defer session.EndSession(context.Background())
+
+	_, err = session.WithTransaction(context.Background(), callback)
+	return err
 }
 
 func (d *Dao[T]) Delete(model T, models ...T) error {
