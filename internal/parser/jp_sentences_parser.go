@@ -47,6 +47,18 @@ func (J JPSentencesParser) Check(note string) error {
 }
 
 func (J JPSentencesParser) Parse(note string) (model.IModel, error) {
-	//TODO implement me
-	panic("implement me")
+	notePreproc := util.PreprocessNote(note)
+	r, _ := regexp.Compile(`(?m)\A\s*^-\s*(?P<Sentence>\S+.*$)(?P<Words>(\n^\t-\s*.+$\n^\t\t-\s*.+$\n^\t\t-\s*.+$)+)\s*\z`)
+	submatches := r.FindStringSubmatch(notePreproc)
+	sentence := submatches[r.SubexpIndex("Sentence")]
+	wordsRaw := submatches[r.SubexpIndex("Words")]
+	wordsRaw = util.UnIndent(wordsRaw)
+	word_notes, _ := jpWordsParser.Split(wordsRaw)
+	words := lo.Map(
+		word_notes, func(item string, _ int) *model.JPWord {
+			word, _ := jpWordsParser.Parse(item)
+			return word.(*model.JPWord)
+		},
+	)
+	return &model.JPSentence{Sentence: sentence, JPWords: &words}, nil
 }

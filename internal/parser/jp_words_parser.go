@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"github.com/samber/lo"
 	"github.com/summuss/anki-bridge/internal/model"
 	"github.com/summuss/anki-bridge/internal/util"
 	"golang.org/x/exp/slices"
@@ -44,8 +45,25 @@ func (w JPWordsParser) Check(note string) error {
 }
 
 func (w JPWordsParser) Parse(note string) (model.IModel, error) {
-	//TODO implement me
-	panic("implement me")
+	notePreproc := util.PreprocessNote(note)
+	r, _ := regexp.Compile(`(?m)\A\s*^-\s*(?P<word>\S+)$\n^\t-\s*(?P<meaning>\S+.*)$\n^\t-\s*(?P<hiragana>\S+)\s+(?P<pitch>\d)\s+(?P<classes>.+)$\s*\z`)
+	submatches := r.FindStringSubmatch(notePreproc)
+	classesStr := submatches[r.SubexpIndex("classes")]
+	classes := util.SplitWithTrimAndOmitEmpty(classesStr, " ")
+	word := submatches[r.SubexpIndex("word")]
+	meaning := submatches[r.SubexpIndex("meaning")]
+	hiragana := submatches[r.SubexpIndex("hiragana")]
+	pitch := submatches[r.SubexpIndex("pitch")]
+	classes_int := lo.Map(
+		classes, func(item string, _ int) int {
+			res, _ := strconv.ParseInt(item, 16, 32)
+			return int(res)
+		},
+	)
+	return &model.JPWord{
+		Hiragana: hiragana, Mean: meaning, Pitch: pitch, Spell: word, WordClasses: classes_int,
+	}, nil
+
 }
 func checkWordClass(class string) error {
 	n, err := strconv.ParseInt(class, 16, 32)

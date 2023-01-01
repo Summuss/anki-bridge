@@ -36,6 +36,7 @@ type BaseModel struct {
 	ID          primitive.ObjectID    `json:"id" bson:"_id,omitempty"`
 	CreatedTime primitive.DateTime    `json:"created_time" bson:"created_time"`
 	UpdateTime  primitive.DateTime    `json:"update_time" bson:"update_time"`
+	ChangeFlag  string                `json:"change_flag"  bson:"change_flag"`
 	Resources   *[]primitive.ObjectID `json:"resources" bson:"resources"`
 	resources   *[]Resource
 }
@@ -107,7 +108,6 @@ func (r Resource) toBsonM() bson.M {
 type JPWord struct {
 	BaseModel   `json:",inline" bson:",inline"`
 	AnkiNoteId  int64  `json:"anki_note_id"  bson:"anki_note_id"`
-	ChangeFlag  string `json:"change_flag"  bson:"change_flag"`
 	Hiragana    string `json:"hiragana"  bson:"hiragana"`
 	Mean        string `json:"mean"  bson:"mean"`
 	Pitch       string `json:"pitch"  bson:"pitch"`
@@ -121,11 +121,10 @@ func (j *JPWord) collectionName() string {
 
 type JPSentence struct {
 	BaseModel   `json:",inline" bson:",inline"`
-	AnkiNoteId  int64     `json:"anki_note_id"  bson:"anki_note_id"`
-	ChangeFlag  string    `json:"change_flag"  bson:"change_flag"`
-	Sentence    string    `json:"sentence" bson:"sentence"`
-	Explanation string    `json:"explanation" bson:"explanation"`
-	JPWords     *[]JPWord `json:"jp_words" bson:"jp_words"`
+	AnkiNoteId  int64      `json:"anki_note_id"  bson:"anki_note_id"`
+	Sentence    string     `json:"sentence" bson:"sentence"`
+	Explanation string     `json:"explanation" bson:"explanation"`
+	JPWords     *[]*JPWord `json:"jp_words" bson:"jp_words"`
 }
 
 func (j JPSentence) collectionName() string {
