@@ -118,3 +118,16 @@ type JPWord struct {
 func (j *JPWord) collectionName() string {
 	return "jp_words"
 }
+
+type JPSentence struct {
+	BaseModel   `json:",inline" bson:",inline"`
+	AnkiNoteId  int64     `json:"anki_note_id"  bson:"anki_note_id"`
+	ChangeFlag  string    `json:"change_flag"  bson:"change_flag"`
+	Sentence    string    `json:"sentence" bson:"sentence"`
+	Explanation string    `json:"explanation" bson:"explanation"`
+	JPWords     *[]JPWord `json:"jp_words" bson:"jp_words"`
+}
+
+func (j JPSentence) collectionName() string {
+	return "jp_sentences"
+}
