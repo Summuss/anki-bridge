@@ -1,10 +1,10 @@
 package model
 
 type UserModel struct {
-	Model `json:",inline" bson:",inline"`
-	Name  string       `json:"name" bson:"name" required:"true" minLen:"2"`
-	Age   int          `json:"age" bson:"age"`
-	Addr  *[]AddrModel `json:"addr" bson:"addr"`
+	BaseModel `json:",inline" bson:",inline"`
+	Name      string       `json:"name" bson:"name" required:"true" minLen:"2"`
+	Age       int          `json:"age" bson:"age"`
+	Addr      *[]AddrModel `json:"addr" bson:"addr"`
 }
 
 func (j *UserModel) collectionName() string {
@@ -12,9 +12,9 @@ func (j *UserModel) collectionName() string {
 }
 
 type AddrModel struct {
-	Model `json:",inline" bson:",inline"`
-	State string `json:"state" bson:"state"`
-	City  string `json:"city" bson:"city"`
+	BaseModel `json:",inline" bson:",inline"`
+	State     string `json:"state" bson:"state"`
+	City      string `json:"city" bson:"city"`
 }
 
 func (j *AddrModel) collectionName() string {

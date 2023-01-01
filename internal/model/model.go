@@ -4,52 +4,94 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+type ResourceType string
+
+var (
+	Sound ResourceType = "sound"
+	Video ResourceType = "video"
+	Image ResourceType = "image"
+)
+
 type IModel interface {
 	collectionName() string
+
 	SetID(id primitive.ObjectID)
 	GetID() primitive.ObjectID
+
 	GetCreatedTime() primitive.DateTime
-	GetUpdateTime() primitive.DateTime
 	SetCreatedTime(primitive.DateTime)
+
+	GetUpdateTime() primitive.DateTime
 	SetUpdateTime(primitive.DateTime)
+
+	GetResources() *[]Resource
+	SetResources(*[]Resource)
+
+	GetResourceIDs() *[]primitive.ObjectID
+	SetResourceIDs(*[]primitive.ObjectID)
 }
 
-type Model struct {
-	ID          primitive.ObjectID `json:"id" bson:"_id,omitempty"`
-	CreatedTime primitive.DateTime `json:"created_time" bson:"created_time"`
-	UpdateTime  primitive.DateTime `json:"update_time" bson:"update_time"`
+type BaseModel struct {
+	ID          primitive.ObjectID    `json:"id" bson:"_id,omitempty"`
+	CreatedTime primitive.DateTime    `json:"created_time" bson:"created_time"`
+	UpdateTime  primitive.DateTime    `json:"update_time" bson:"update_time"`
+	Resources   *[]primitive.ObjectID `json:"resources" bson:"resources"`
+	resources   *[]Resource
 }
 
-func (m *Model) GetID() primitive.ObjectID {
+func (m *BaseModel) GetID() primitive.ObjectID {
 	return m.ID
 }
-func (m *Model) SetID(id primitive.ObjectID) {
+func (m *BaseModel) SetID(id primitive.ObjectID) {
 	m.ID = id
 }
 
-func (m *Model) GetCreatedTime() primitive.DateTime {
+func (m *BaseModel) GetCreatedTime() primitive.DateTime {
 	return m.CreatedTime
 }
 
-func (m *Model) GetUpdateTime() primitive.DateTime {
+func (m *BaseModel) GetUpdateTime() primitive.DateTime {
 	return m.GetUpdateTime()
 }
-func (m *Model) SetUpdateTime(time primitive.DateTime) {
+func (m *BaseModel) SetUpdateTime(time primitive.DateTime) {
 	m.UpdateTime = time
 }
-func (m *Model) SetCreatedTime(time primitive.DateTime) {
+func (m *BaseModel) SetCreatedTime(time primitive.DateTime) {
 	m.CreatedTime = time
 }
 
-func getZeroModel() Model {
-	return Model{ID: primitive.NilObjectID, CreatedTime: 0, UpdateTime: 0}
+func (m *BaseModel) GetResources() *[]Resource {
+	return m.resources
 }
 
-type FileModel struct {
+func (m *BaseModel) SetResources(rs *[]Resource) {
+	m.resources = rs
+}
+
+func (m *BaseModel) GetResourceIDs() *[]primitive.ObjectID {
+	return m.Resources
+}
+
+func (m *BaseModel) SetResourceIDs(ris *[]primitive.ObjectID) {
+	m.Resources = ris
+}
+
+func getZeroModel() BaseModel {
+	return BaseModel{ID: primitive.NilObjectID, CreatedTime: 0, UpdateTime: 0}
+}
+
+type Resource struct {
+	id           primitive.ObjectID
+	extName      string
+	resourceType ResourceType
+	fileName     string
+	collection   string
+	ownerID      primitive.ObjectID
+	data         []byte
 }
 
 type JPWord struct {
-	Model       `json:",inline" bson:",inline"`
+	BaseModel   `json:",inline" bson:",inline"`
 	AnkiNoteId  string               `json:"anki_note_id"  bson:"anki_note_id"`
 	ChangeFlag  string               `json:"change_flag"  bson:"change_flag"`
 	Hiragana    string               `json:"hiragana"  bson:"hiragana"`
