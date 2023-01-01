@@ -2,8 +2,9 @@ package model
 
 type UserModel struct {
 	Model `json:",inline" bson:",inline"`
-	Name  string `json:"name" bson:"name" required:"true" minLen:"2"`
-	Age   int    `json:"age" bson:"age"`
+	Name  string       `json:"name" bson:"name" required:"true" minLen:"2"`
+	Age   int          `json:"age" bson:"age"`
+	Addr  *[]AddrModel `json:"addr" bson:"addr"`
 }
 
 func (j *UserModel) collectionName() string {

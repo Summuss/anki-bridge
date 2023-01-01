@@ -6,25 +6,6 @@ import (
 	"testing"
 )
 
-func Test_connectToMongo(t *testing.T) {
-	/*	uri := "mongodb://mongoadmin:secret@daemon:27017/test?authSource=admin"
-		client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
-		if err != nil {
-			panic(err)
-		}
-	*/
-	var d = GetDao(&UserModel{})
-	objectID, err := primitive.ObjectIDFromHex("63aee359aa00acdf6ffc8769")
-	if err != nil {
-		panic(err)
-	}
-	res, err := d.FindById(objectID)
-	if err != nil {
-		panic(err)
-	}
-	print(res)
-}
-
 func TestDao_FindById(t *testing.T) {
 	GetDao(&UserModel{})
 	type args struct {
@@ -41,7 +22,7 @@ func TestDao_FindById(t *testing.T) {
 		{
 			name:    "1",
 			d:       GetDao(&UserModel{}),
-			args:    args{ObjectIDFromHex("63aee359aa00acdf6ffc8769")},
+			args:    args{ObjectIDFromHex("63b1155b63ac6ba5560e0f80")},
 			want:    &UserModel{},
 			wantErr: false,
 		},
@@ -91,4 +72,24 @@ func TestDao_FindMany(t *testing.T) {
 			},
 		)
 	}
+}
+
+func TestDao_Save(t *testing.T) {
+	model1 := UserModel{
+		getZeroModel(), "liu", 27,
+		&[]AddrModel{{getZeroModel(), "jp", "tokyo"}},
+	}
+	model2 := model1
+	model2.Age = 24
+	dao := GetDao(&UserModel{})
+	err := dao.Save(&model1)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	model1.Age = 26
+	err = dao.Save(&model1, &model2)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
 }

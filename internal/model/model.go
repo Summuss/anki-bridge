@@ -6,9 +6,12 @@ import (
 
 type IModel interface {
 	collectionName() string
+	SetID(id primitive.ObjectID)
 	GetID() primitive.ObjectID
 	GetCreatedTime() primitive.DateTime
 	GetUpdateTime() primitive.DateTime
+	SetCreatedTime(primitive.DateTime)
+	SetUpdateTime(primitive.DateTime)
 }
 
 type Model struct {
@@ -20,6 +23,9 @@ type Model struct {
 func (m *Model) GetID() primitive.ObjectID {
 	return m.ID
 }
+func (m *Model) SetID(id primitive.ObjectID) {
+	m.ID = id
+}
 
 func (m *Model) GetCreatedTime() primitive.DateTime {
 	return m.CreatedTime
@@ -27,6 +33,16 @@ func (m *Model) GetCreatedTime() primitive.DateTime {
 
 func (m *Model) GetUpdateTime() primitive.DateTime {
 	return m.GetUpdateTime()
+}
+func (m *Model) SetUpdateTime(time primitive.DateTime) {
+	m.UpdateTime = time
+}
+func (m *Model) SetCreatedTime(time primitive.DateTime) {
+	m.CreatedTime = time
+}
+
+func getZeroModel() Model {
+	return Model{ID: primitive.NilObjectID, CreatedTime: 0, UpdateTime: 0}
 }
 
 type FileModel struct {
