@@ -15,7 +15,7 @@ type Parser interface {
 	NoteName() string
 	Split(string) ([]string, error)
 	Check(string) error
-	Parse(string) (model.model, error)
+	Parse(string) (model.IModel, error)
 }
 
 var (

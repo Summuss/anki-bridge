@@ -14,13 +14,6 @@ import (
 	"time"
 )
 
-type IDao[T IModel] interface {
-	FindById(primitive.ObjectID) (*T, error)
-	FindMany(query interface{}) (*[]T, error)
-	Save(model T, models ...T) error
-	Delete(model T, models ...T) error
-}
-
 type Dao[T IModel] struct {
 	Client *mongo.Client
 	DBName string
