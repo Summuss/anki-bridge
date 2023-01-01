@@ -1,6 +1,7 @@
 package model
 
 import (
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -81,25 +82,32 @@ func getZeroModel() BaseModel {
 }
 
 type Resource struct {
-	id           primitive.ObjectID
-	extName      string
-	resourceType ResourceType
-	fileName     string
-	collection   string
-	ownerID      primitive.ObjectID
+	Id           primitive.ObjectID `json:"_id" bson:"_id"`
+	ExtName      string             `json:"ext_name" bson:"ext_name"`
+	ResourceType ResourceType       `json:"file_type" bson:"file_type"`
+	FileName     string             `json:"file_name" bson:"file_name"`
+	Collection   string             `json:"collection" bson:"collection"`
+	OwnerID      primitive.ObjectID `json:"model_id" bson:"model_id"`
+	Length       int                `json:"length" bson:"length"`
 	data         []byte
+}
+
+func (r Resource) toBsonM() bson.M {
+	return bson.M{
+		"ext_name": r.ExtName, "file_type": r.ResourceType,
+		"file_name": r.FileName, "collection": r.Collection, "model_id": r.OwnerID,
+	}
 }
 
 type JPWord struct {
 	BaseModel   `json:",inline" bson:",inline"`
-	AnkiNoteId  string               `json:"anki_note_id"  bson:"anki_note_id"`
-	ChangeFlag  string               `json:"change_flag"  bson:"change_flag"`
-	Hiragana    string               `json:"hiragana"  bson:"hiragana"`
-	Mean        string               `json:"mean"  bson:"mean"`
-	Pitch       string               `json:"pitch"  bson:"pitch"`
-	Resources   []primitive.ObjectID `json:"resources"  bson:"resources"`
-	Spell       string               `json:"spell"  bson:"spell"`
-	WordClasses []int                `json:"word_classes"  bson:"word_classes"`
+	AnkiNoteId  int64  `json:"anki_note_id"  bson:"anki_note_id"`
+	ChangeFlag  string `json:"change_flag"  bson:"change_flag"`
+	Hiragana    string `json:"hiragana"  bson:"hiragana"`
+	Mean        string `json:"mean"  bson:"mean"`
+	Pitch       string `json:"pitch"  bson:"pitch"`
+	Spell       string `json:"spell"  bson:"spell"`
+	WordClasses []int  `json:"word_classes"  bson:"word_classes"`
 }
 
 func (j *JPWord) collectionName() string {

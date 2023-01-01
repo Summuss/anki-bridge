@@ -12,9 +12,9 @@ func (j *UserModel) collectionName() string {
 }
 
 type AddrModel struct {
-	BaseModel `json:",inline" bson:",inline"`
-	State     string `json:"state" bson:"state"`
-	City      string `json:"city" bson:"city"`
+	b     BaseModel `json:",inline" bson:",inline"`
+	State string    `json:"state" bson:"state"`
+	City  string    `json:"city" bson:"city"`
 }
 
 func (j *AddrModel) collectionName() string {

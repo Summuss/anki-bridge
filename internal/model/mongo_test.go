@@ -6,6 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"os"
 	"testing"
 )
 
@@ -74,20 +75,20 @@ func TestDao_FindMany(t *testing.T) {
 		d       Dao[T]
 		args    args
 		want    *[]T
-		wantErr bool
+		wantErr int
 	}
-	tests := []testCase[*UserModel]{
+	tests := []testCase[*JPWord]{
 		{
-			name: "1", d: GetDao(mongoClient, TestDB, &UserModel{}), args: args{bson.D{}},
+			name: "1", d: GetDao(mongoClient, TestDB, &JPWord{}), args: args{bson.D{}},
 			want:    nil,
-			wantErr: false,
+			wantErr: 1,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(
 			tt.name, func(t *testing.T) {
 				got, err := tt.d.FindMany(tt.args.query)
-				if (err != nil) != tt.wantErr {
+				if (err != nil) != false {
 					t.Errorf("FindMany() error = %v, wantErr %v", err, tt.wantErr)
 					return
 				}
@@ -118,4 +119,59 @@ func TestDao_Save(t *testing.T) {
 		t.Errorf(err.Error())
 	}
 
+}
+
+func TestDao_loadResources(t *testing.T) {
+	type args[T IModel] struct {
+		t T
+	}
+	type testCase[T IModel] struct {
+		name    string
+		d       Dao[T]
+		args    args[T]
+		wantErr bool
+	}
+
+	dao := GetDao(mongoClient, TestDB, &JPWord{})
+	jpWord := JPWord{}
+	jpWord.Resources = &[]primitive.ObjectID{
+		ObjectIDFromHex("6180a5b55c1e8d3bb3362f36"),
+		ObjectIDFromHex("6180a5ba5c1e8d3bb3362f3d"),
+		ObjectIDFromHex("6180a5d05c1e8d3bb3362f40"),
+	}
+	tests := []testCase[*JPWord]{
+		{
+			name:    "1",
+			d:       dao,
+			args:    args[*JPWord]{&jpWord},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(
+			tt.name, func(t *testing.T) {
+				if err := tt.d.loadResources(tt.args.t); (err != nil) != tt.wantErr {
+					t.Errorf("loadResources() error = %v, wantErr %v", err, tt.wantErr)
+				}
+			},
+		)
+		if len(*tt.args.t.resources) == 0 {
+			t.Errorf("empty resources")
+		}
+		resource := (*tt.args.t.resources)[0]
+		if len(resource.data) == 0 {
+			t.Errorf("empty data")
+
+		} else {
+			fo, err := os.Create(resource.FileName)
+			if err != nil {
+				panic(err)
+			}
+			_, err = fo.Write(resource.data)
+			if err != nil {
+				panic(err)
+			}
+
+		}
+	}
 }
