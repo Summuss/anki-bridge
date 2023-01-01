@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"github.com/summuss/anki-bridge/internal/model"
 	"reflect"
 	"testing"
 )
@@ -321,6 +322,58 @@ func Test_computeNoteName(t *testing.T) {
 			tt.name, func(t *testing.T) {
 				if got := computeRealNoteName(tt.args.rowNoteName); got != tt.want {
 					t.Errorf("computeRealNoteName() = %v, want %v", got, tt.want)
+				}
+			},
+		)
+	}
+}
+
+func TestParse(t *testing.T) {
+	type args struct {
+		text string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    *[]model.IModel
+		wantErr bool
+	}{
+		{
+			name: "1",
+			args: args{
+				text: `
+- [[Jp Sentences]]
+	- ‎原因不明の病に {{cloze 冒される}} ので
+		- 冒す
+			- 侵袭；患（病）。（害を及ぼす。）
+			- おかす　2　7
+	- 前職で重いヘルニアを {{cloze ‎患}} ってらしたみたいで
+		- 患う
+			- 患病，生病。〔病気になる。〕
+			- わずらう　0　7
+- [[Jp Words]]
+	- 出来事
+		- (偶发)的事件，变故。（持ち上がった事件・事柄。）
+		- できごと　2　１
+	- せっかち
+		- 性急；急躁（落ち着きがなく，先へ先へと急ぐ・ことさま。また，そのような性質の人。性急）。
+		- せっかち　1　3
+
+`,
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(
+			tt.name, func(t *testing.T) {
+				got, err := Parse(tt.args.text)
+				if (err != nil) != tt.wantErr {
+					t.Errorf("Parse() error = %v, wantErr %v", err, tt.wantErr)
+					return
+				}
+				if !reflect.DeepEqual(got, tt.want) {
+					t.Errorf("Parse() got = %v, want %v", got, tt.want)
 				}
 			},
 		)

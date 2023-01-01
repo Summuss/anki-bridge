@@ -11,19 +11,19 @@ import (
 )
 
 var TestDB = "test"
-var mongoClient *mongo.Client
+var MongoClient *mongo.Client
 
 func init() {
 	uri := "mongodb://mongoadmin:secret@daemon:27017/test?authSource=admin"
 	var err error
-	mongoClient, err = mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
+	MongoClient, err = mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
 	if err != nil {
 		panic(err)
 	}
 }
 
 func TestDao_FindById(t *testing.T) {
-	GetDao(mongoClient, TestDB, &UserModel{})
+	GetDao(MongoClient, TestDB, &UserModel{})
 	type args struct {
 		id primitive.ObjectID
 	}
@@ -37,7 +37,7 @@ func TestDao_FindById(t *testing.T) {
 	tests := []testCase[*UserModel]{
 		{
 			name:    "1",
-			d:       GetDao(mongoClient, TestDB, &UserModel{}),
+			d:       GetDao(MongoClient, TestDB, &UserModel{}),
 			args:    args{ObjectIDFromHex("63b1155b63ac6ba5560e0f80")},
 			want:    &UserModel{},
 			wantErr: false,
@@ -58,7 +58,7 @@ func TestDao_FindById(t *testing.T) {
 		)
 	}
 
-	jpWordDao := GetDao(mongoClient, TestDB, &JPWord{})
+	jpWordDao := GetDao(MongoClient, TestDB, &JPWord{})
 	res, err := jpWordDao.FindById(ObjectIDFromHex("6180a5d05c1e8d3bb3362f3f"))
 	if err != nil {
 		t.Errorf(err.Error())
@@ -79,7 +79,7 @@ func TestDao_FindMany(t *testing.T) {
 	}
 	tests := []testCase[*JPWord]{
 		{
-			name: "1", d: GetDao(mongoClient, TestDB, &JPWord{}), args: args{bson.D{}},
+			name: "1", d: GetDao(MongoClient, TestDB, &JPWord{}), args: args{bson.D{}},
 			want:    nil,
 			wantErr: 1,
 		},
@@ -108,7 +108,7 @@ func TestDao_Save(t *testing.T) {
 	}
 	model2 := model1
 	model2.Age = 24
-	dao := GetDao(mongoClient, TestDB, &UserModel{})
+	dao := GetDao(MongoClient, TestDB, &UserModel{})
 	err := dao.Save(&model1)
 	if err != nil {
 		t.Errorf(err.Error())
@@ -136,7 +136,7 @@ func TestDao_Save2(t *testing.T) {
 	resource := Resource{Metadata: metadata, data: data[:n]}
 	resources := []Resource{resource}
 	jpWord := JPWord{BaseModel: BaseModel{resources: &resources}, Spell: "hello"}
-	dao := GetDao(mongoClient, TestDB, &JPWord{})
+	dao := GetDao(MongoClient, TestDB, &JPWord{})
 	err = dao.Save(&jpWord)
 	if err != nil {
 		t.Errorf(err.Error())
@@ -155,7 +155,7 @@ func TestDao_loadResources(t *testing.T) {
 		wantErr bool
 	}
 
-	dao := GetDao(mongoClient, TestDB, &JPWord{})
+	dao := GetDao(MongoClient, TestDB, &JPWord{})
 	jpWord := JPWord{}
 	jpWord.Resources = &[]primitive.ObjectID{
 		ObjectIDFromHex("6180a5b55c1e8d3bb3362f36"),
@@ -226,7 +226,7 @@ func TestDao_saveResources(t *testing.T) {
 		{
 			name: "1xx",
 			d: GetDao(
-				mongoClient, TestDB,
+				MongoClient, TestDB,
 				&JPWord{},
 			),
 			args:    args[*JPWord]{t: &JPWord{BaseModel: BaseModel{resources: &resources}}},

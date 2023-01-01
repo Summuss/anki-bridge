@@ -89,6 +89,10 @@ type Resource struct {
 	data     []byte
 }
 
+func (r *Resource) SetData(data []byte) {
+	r.data = data
+}
+
 type ResourceMetadata struct {
 	ExtName      string             `json:"ext_name" bson:"ext_name"`
 	ResourceType ResourceType       `json:"file_type" bson:"file_type"`
@@ -97,7 +101,7 @@ type ResourceMetadata struct {
 	FileName     string             `json:"file_name" bson:"file_name"`
 }
 
-func (r Resource) toBsonM() bson.M {
+func (r *Resource) toBsonM() bson.M {
 	return bson.M{
 		"ext_name": r.Metadata.ExtName, "file_type": r.Metadata.ResourceType,
 		"file_name": r.Metadata.FileName, "collection": r.Metadata.Collection,

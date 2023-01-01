@@ -111,6 +111,47 @@ func checkNotes(notes []string, p Parser) error {
 	return util.MergeErrors(errList.ToSlice())
 }
 
+func Parse(text string) (*[]model.IModel, error) {
+	res := []model.IModel{}
+	noteTypeName2SubTxt, _ := splitByNoteType(text)
+	var wg sync.WaitGroup
+	size := len(noteTypeName2SubTxt)
+	if size == 0 {
+		return &res, nil
+	}
+	wg.Add(size)
+
+	errList := util.SafeList[error]{}
+	imodels := util.SafeList[model.IModel]{}
+
+	for noteName, subTxt := range noteTypeName2SubTxt {
+		noteName := noteName
+		subTxt := subTxt
+		go func() {
+			defer wg.Done()
+			parser, _ := findParser(noteName)
+			notes, _ := parser.Split(subTxt)
+			err := util.DoParallel(
+				&notes, func(note *string) error {
+					m, err := parser.Parse(*note)
+					if err != nil {
+						return err
+					}
+					imodels.Add(m)
+					return nil
+				},
+			)
+			if err != nil {
+				errList.Add(err)
+				return
+			}
+		}()
+	}
+	wg.Wait()
+	res = imodels.ToSlice()
+	return &res, nil
+}
+
 func findParser(noteName string) (Parser, error) {
 	parserFlt := lo.Filter(
 		*parsers, func(item Parser, index int) bool {

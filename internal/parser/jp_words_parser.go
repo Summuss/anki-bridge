@@ -8,6 +8,7 @@ import (
 	"golang.org/x/exp/slices"
 	"regexp"
 	"strconv"
+	"strings"
 )
 
 var jpWordsParser = JPWordsParser{}
@@ -60,9 +61,38 @@ func (w JPWordsParser) Parse(note string) (model.IModel, error) {
 			return int(res)
 		},
 	)
-	return &model.JPWord{
+	maleURL, femaleURL, err := getTTSURL(word)
+	if err != nil {
+		return nil, err
+	}
+	data1, err := util.CurlGetData(maleURL)
+	if err != nil {
+		return nil, fmt.Errorf("download tts from %s failed,error:\n%s", maleURL, err.Error())
+	}
+	data2, err := util.CurlGetData(femaleURL)
+	if err != nil {
+		return nil, fmt.Errorf("download tts from %s failed,error:\n%s", femaleURL, err.Error())
+	}
+
+	resource1 := &model.Resource{
+		Metadata: model.ResourceMetadata{
+			FileName: word + "-male.mp3", ResourceType: model.Sound, ExtName: ".mp3",
+		},
+	}
+	resource1.SetData(*data1)
+
+	resource2 := &model.Resource{
+		Metadata: model.ResourceMetadata{
+			FileName: word + "-female.mp3", ResourceType: model.Sound, ExtName: ".mp3",
+		},
+	}
+	resource2.SetData(*data2)
+
+	jpWord := &model.JPWord{
 		Hiragana: hiragana, Mean: meaning, Pitch: pitch, Spell: word, WordClasses: classes_int,
-	}, nil
+	}
+	jpWord.SetResources(&[]model.Resource{*resource1, *resource2})
+	return jpWord, nil
 
 }
 func checkWordClass(class string) error {
@@ -75,4 +105,27 @@ func checkWordClass(class string) error {
 		return fmt.Errorf("incorrect class: %s", class)
 	}
 	return nil
+}
+
+func getTTSURL(txt string) (maleURL string, femaleURL string, err error) {
+	txt = "\"" + txt + "\""
+	//FIXME
+	jsFile := "/home/summus/Code/script/python-script/jp_study/oddcast_api.js"
+	res1, err := util.Exec("/usr/bin/node", jsFile, txt, "takeru")
+
+	if err != nil {
+		return "", "", fmt.Errorf(
+			"\"node %s %s %s\" exec failed,%s", jsFile, txt, "takeru", err.Error(),
+		)
+	}
+	res2, err := util.Exec("/usr/bin/node", jsFile, txt, "sayaka")
+	if err != nil {
+		return "", "", fmt.Errorf(
+			"\"node %s %s %s\" exec failed,%s", jsFile, txt, "sayaka", err.Error(),
+		)
+	}
+	res1 = strings.ReplaceAll(res1, "\n", "")
+	res2 = strings.ReplaceAll(res2, "\n", "")
+	return res1, res2, nil
+
 }
