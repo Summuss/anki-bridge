@@ -11,8 +11,10 @@ import (
 	"strings"
 )
 
+var jpWordsRenderIns = jpWordsRender{}
+
 func init() {
-	renderList = append(renderList, jpWordsRender{})
+	renderList = append(renderList, jpWordsRenderIns)
 }
 
 type jpWordsRender struct {
