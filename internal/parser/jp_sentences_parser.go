@@ -58,11 +58,19 @@ func (J JPSentencesParser) Parse(note string) (model.IModel, error) {
 	wordsRaw := submatches[r.SubexpIndex("Words")]
 	wordsRaw = util.UnIndent(wordsRaw)
 	word_notes, _ := jpWordsParser.Split(wordsRaw)
+	var err error
 	words := lo.Map(
 		word_notes, func(item string, _ int) *model.JPWord {
-			word, _ := jpWordsParser.Parse(item)
+			word, e := jpWordsParser.Parse(item)
+			if e != nil {
+				err = e
+				return nil
+			}
 			return word.(*model.JPWord)
 		},
 	)
+	if err != nil {
+		return nil, fmt.Errorf("parse sentence `%s`failed, error:\n%s", sentence, err.Error())
+	}
 	return &model.JPSentence{Sentence: sentence, JPWords: &words}, nil
 }

@@ -29,21 +29,22 @@ func SplitByNoIndentLine(txt string) ([]string, error) {
 
 func PreprocessNote(note string) string {
 	replaceMap := map[string]string{
-		"＃": "#",
-		"＆": "&",
-		"　": " ",
-		"？": "?",
-		"＠": "@",
-		"１": "1",
-		"２": "2",
-		"３": "3",
-		"４": "4",
-		"５": "5",
-		"６": "6",
-		"７": "7",
-		"８": "8",
-		"９": "9",
-		"‎": "",
+		"＃":  "#",
+		"＆":  "&",
+		"　":  " ",
+		"？":  "?",
+		"＠":  "@",
+		"１":  "1",
+		"２":  "2",
+		"３":  "3",
+		"４":  "4",
+		"５":  "5",
+		"６":  "6",
+		"７":  "7",
+		"８":  "8",
+		"９":  "9",
+		"‎":  "",
+		"\r": "",
 	}
 	for k, v := range replaceMap {
 		note = strings.ReplaceAll(note, k, v)

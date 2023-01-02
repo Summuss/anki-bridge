@@ -3,6 +3,7 @@ package parser
 import (
 	"fmt"
 	"github.com/samber/lo"
+	"github.com/summuss/anki-bridge/internal/config"
 	"github.com/summuss/anki-bridge/internal/model"
 	"github.com/summuss/anki-bridge/internal/util"
 	"golang.org/x/exp/slices"
@@ -114,18 +115,20 @@ func checkWordClass(class string) error {
 func getTTSURL(txt string) (maleURL string, femaleURL string, err error) {
 	txt = "\"" + txt + "\""
 	//FIXME
-	jsFile := "/home/summus/Code/script/python-script/jp_study/oddcast_api.js"
-	res1, err := util.Exec("/usr/bin/node", jsFile, txt, "takeru")
+	args := config.Conf.TTScmd
+	args = append(args, txt, "takeru")
+	res1, err := util.Exec(args[0], args[1:]...)
 
 	if err != nil {
 		return "", "", fmt.Errorf(
-			"\"node %s %s %s\" exec failed,%s", jsFile, txt, "takeru", err.Error(),
+			"%s exec failed, %s", strings.Join(args, " "), err.Error(),
 		)
 	}
-	res2, err := util.Exec("/usr/bin/node", jsFile, txt, "sayaka")
+	args[len(args)-1] = "sayaka"
+	res2, err := util.Exec(args[0], args[1:]...)
 	if err != nil {
 		return "", "", fmt.Errorf(
-			"\"node %s %s %s\" exec failed,%s", jsFile, txt, "sayaka", err.Error(),
+			"%s exec failed, %s", strings.Join(args, " "), err.Error(),
 		)
 	}
 	res1 = strings.ReplaceAll(res1, "\n", "")

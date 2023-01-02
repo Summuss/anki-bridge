@@ -22,12 +22,16 @@ func init() {
 	if err != nil {
 		panic(fmt.Errorf("parse yml failed: %v", err))
 	}
+	if len(Conf.TTScmd) == 0 {
+		panic("conf file error: tts-cmd is empty")
+	}
 
 }
 
 type Config struct {
-	MongoConnectURL  string `yaml:"mongo-connect-url"`
-	DBName           string `yaml:"db-name"`
-	AnkiAPIURL       string `yaml:"anki-api-url"`
-	DefaultInputFile string `yaml:"default-input-file"`
+	MongoConnectURL  string   `yaml:"mongo-connect-url"`
+	DBName           string   `yaml:"db-name"`
+	AnkiAPIURL       string   `yaml:"anki-api-url"`
+	DefaultInputFile string   `yaml:"default-input-file"`
+	TTScmd           []string `yaml:"tts-cmd"`
 }
