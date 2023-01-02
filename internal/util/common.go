@@ -44,7 +44,6 @@ func Exec(prog string, arg ...string) (string, error) {
 }
 
 func CurlGetData(url string) (*[]byte, error) {
-	log.Printf("start to download %s\n", url)
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("download file from %s failed,%s", url, err.Error())
@@ -54,7 +53,6 @@ func CurlGetData(url string) (*[]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("download file from %s failed,%s", url, err.Error())
 	}
-	log.Printf("finish to download %s\n", url)
 
 	return &body, nil
 
