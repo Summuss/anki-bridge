@@ -147,7 +147,6 @@ func TestJPWordsParser_Parse(t *testing.T) {
 			},
 			want: &model.JPWord{
 				BaseModel:   model.BaseModel{},
-				AnkiNoteId:  0,
 				Hiragana:    "できごと",
 				Mean:        "(偶发)的事件，变故。（持ち上がった事件・事柄。）",
 				Pitch:       "2",

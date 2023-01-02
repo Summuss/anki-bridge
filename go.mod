@@ -7,6 +7,7 @@ require (
 	github.com/spf13/cobra v1.6.1
 	go.mongodb.org/mongo-driver v1.11.1
 	golang.org/x/exp v0.0.0-20220303212507-bbda1eaf7a17
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (

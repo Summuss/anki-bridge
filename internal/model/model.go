@@ -103,6 +103,9 @@ type Resource struct {
 func (r *Resource) SetData(data []byte) {
 	r.data = data
 }
+func (r *Resource) GetData() []byte {
+	return r.data
+}
 
 type ResourceMetadata struct {
 	ExtName      string             `json:"ext_name" bson:"ext_name"`

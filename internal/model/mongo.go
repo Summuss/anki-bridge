@@ -207,7 +207,6 @@ func (d *Dao[T]) Save(model T, models ...T) error {
 			for i, id := range res.InsertedIDs {
 				objectID := id.(primitive.ObjectID)
 				insertMs[i].(T).SetID(objectID)
-				println(objectID.Hex())
 			}
 			err = util.DoParallel(
 				&insertMs, func(i *interface{}) error {

@@ -1,0 +1,4 @@
+---
+mongo-connect-url: "mongodb://mongoadmin:secret@daemon:27017/test?authSource=admin"
+db-name: test
+anki-api-url: "http://192.168.162.1:8766"
