@@ -11,7 +11,7 @@ import (
 	"sync"
 )
 
-type Parser interface {
+type iParser interface {
 	NoteName() string
 	Split(string) ([]string, error)
 	Check(string) error
@@ -19,7 +19,7 @@ type Parser interface {
 }
 
 var (
-	parsers = &[]Parser{jpWordsParser, jpSentencesParser}
+	parsers = &[]iParser{jpWordsParser, jpSentencesParser}
 )
 
 func splitByNoteType(content string) (map[string]string, error) {
@@ -88,7 +88,7 @@ func CheckInput(txt string) error {
 	return util.MergeErrors(errList.ToSlice())
 }
 
-func checkNotes(notes []string, p Parser) error {
+func checkNotes(notes []string, p iParser) error {
 	if len(notes) == 0 {
 		return nil
 
@@ -112,7 +112,7 @@ func checkNotes(notes []string, p Parser) error {
 }
 
 func Parse(text string) (*[]model.IModel, error) {
-	res := []model.IModel{}
+	var res []model.IModel
 	noteTypeName2SubTxt, _ := splitByNoteType(text)
 	var wg sync.WaitGroup
 	size := len(noteTypeName2SubTxt)
@@ -152,9 +152,9 @@ func Parse(text string) (*[]model.IModel, error) {
 	return &res, nil
 }
 
-func findParser(noteName string) (Parser, error) {
+func findParser(noteName string) (iParser, error) {
 	parserFlt := lo.Filter(
-		*parsers, func(item Parser, index int) bool {
+		*parsers, func(item iParser, index int) bool {
 			return item.NoteName() == computeRealNoteName(noteName)
 		},
 	)

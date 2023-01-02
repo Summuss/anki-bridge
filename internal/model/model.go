@@ -3,6 +3,7 @@ package model
 import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type ResourceType string
@@ -14,7 +15,7 @@ var (
 )
 
 type IModel interface {
-	collectionName() string
+	CollectionName() string
 
 	SetID(id primitive.ObjectID)
 	GetID() primitive.ObjectID
@@ -30,6 +31,11 @@ type IModel interface {
 
 	GetResourceIDs() *[]primitive.ObjectID
 	SetResourceIDs(*[]primitive.ObjectID)
+
+	SetAnkiNoteId(int64)
+
+	Save(client *mongo.Client, dbName string) error
+	Desc() string
 }
 
 type BaseModel struct {
@@ -37,6 +43,7 @@ type BaseModel struct {
 	CreatedTime primitive.DateTime    `json:"created_time" bson:"created_time"`
 	UpdateTime  primitive.DateTime    `json:"update_time" bson:"update_time"`
 	ChangeFlag  string                `json:"change_flag"  bson:"change_flag"`
+	AnkiNoteId  int64                 `json:"anki_note_id"  bson:"anki_note_id"`
 	Resources   *[]primitive.ObjectID `json:"resources" bson:"resources"`
 	resources   *[]Resource
 }
@@ -78,6 +85,10 @@ func (m *BaseModel) SetResourceIDs(ris *[]primitive.ObjectID) {
 	m.Resources = ris
 }
 
+func (m *BaseModel) SetAnkiNoteId(id int64) {
+	m.AnkiNoteId = id
+}
+
 func getZeroModel() BaseModel {
 	return BaseModel{ID: primitive.NilObjectID, CreatedTime: 0, UpdateTime: 0}
 }
@@ -111,7 +122,6 @@ func (r *Resource) toBsonM() bson.M {
 
 type JPWord struct {
 	BaseModel   `json:",inline" bson:",inline"`
-	AnkiNoteId  int64  `json:"anki_note_id"  bson:"anki_note_id"`
 	Hiragana    string `json:"hiragana"  bson:"hiragana"`
 	Mean        string `json:"mean"  bson:"mean"`
 	Pitch       string `json:"pitch"  bson:"pitch"`
@@ -119,18 +129,35 @@ type JPWord struct {
 	WordClasses []int  `json:"word_classes"  bson:"word_classes"`
 }
 
-func (j *JPWord) collectionName() string {
+func (j *JPWord) CollectionName() string {
 	return "jp_words"
+}
+
+func (j *JPWord) Save(client *mongo.Client, dbName string) error {
+	dao := GetDao(client, dbName, j)
+	return dao.Save(j)
+}
+
+func (j *JPWord) Desc() string {
+	return j.CollectionName() + ":" + j.Spell
 }
 
 type JPSentence struct {
 	BaseModel   `json:",inline" bson:",inline"`
-	AnkiNoteId  int64      `json:"anki_note_id"  bson:"anki_note_id"`
 	Sentence    string     `json:"sentence" bson:"sentence"`
 	Explanation string     `json:"explanation" bson:"explanation"`
 	JPWords     *[]*JPWord `json:"jp_words" bson:"jp_words"`
 }
 
-func (j JPSentence) collectionName() string {
+func (j *JPSentence) CollectionName() string {
 	return "jp_sentences"
+}
+func (j *JPSentence) Desc() string {
+	return j.CollectionName() + ":" + j.Sentence
+}
+
+func (j *JPSentence) Save(client *mongo.Client, dbName string) error {
+	dao := GetDao(client, dbName, j)
+	return dao.Save(j)
+
 }

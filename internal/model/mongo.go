@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/summuss/anki-bridge/internal/config"
 	"github.com/summuss/anki-bridge/internal/util"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -14,9 +15,28 @@ import (
 	"time"
 )
 
+var MongoClient *mongo.Client
+
+func init() {
+	var err error
+	MongoClient, err = mongo.Connect(
+		context.TODO(), options.Client().ApplyURI(config.Conf.MongoConnectURL),
+	)
+	if err != nil {
+		panic(err)
+	}
+}
+
 type Dao[T IModel] struct {
 	Client *mongo.Client
 	DBName string
+}
+
+type ExistError struct {
+}
+
+func (e ExistError) Error() string {
+	return "model existed"
 }
 
 func (d *Dao[T]) FindById(id primitive.ObjectID) (T, error) {
@@ -79,7 +99,7 @@ func (d *Dao[T]) saveResources(t T) error {
 			}
 			r.Metadata.OwnerID = t.GetID()
 			r.Length = len(r.data)
-			r.Metadata.Collection = t.collectionName()
+			r.Metadata.Collection = t.CollectionName()
 			metadata := options.GridFSUpload().SetMetadata(r.toBsonM())
 			db := d.Client.Database(d.DBName)
 			bucket, err := gridfs.NewBucket(db)
@@ -226,9 +246,9 @@ func (d *Dao[T]) Delete(model T, models ...T) error {
 }
 func (d *Dao[T]) getCollection() *mongo.Collection {
 	var t T
-	collectionName := t.collectionName()
+	collectionName := t.CollectionName()
 	if len(collectionName) == 0 {
-		panic(fmt.Sprintf("collectionName is empty for model %s", reflect.TypeOf(t)))
+		panic(fmt.Sprintf("CollectionName is empty for model %s", reflect.TypeOf(t)))
 	}
 	return d.Client.Database(d.DBName).Collection(collectionName)
 }
