@@ -106,7 +106,6 @@ func TestJPSentencesParser_Parse(t *testing.T) {
 	}
 	word := &model.JPWord{
 		BaseModel:   model.BaseModel{},
-		AnkiNoteId:  0,
 		Hiragana:    "おかす",
 		Mean:        "侵袭；患（病）。（害を及ぼす。）",
 		Pitch:       "2",
@@ -132,7 +131,6 @@ func TestJPSentencesParser_Parse(t *testing.T) {
 			},
 			want: &model.JPSentence{
 				BaseModel:   model.BaseModel{},
-				AnkiNoteId:  0,
 				Sentence:    "原因不明の病に {{cloze 冒される}} ので",
 				Explanation: "",
 				JPWords:     &[]*model.JPWord{word},

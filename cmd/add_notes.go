@@ -2,15 +2,46 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/spf13/cobra"
 	"github.com/summuss/anki-bridge/internal/anki"
 	"github.com/summuss/anki-bridge/internal/config"
 	"github.com/summuss/anki-bridge/internal/model"
 	"github.com/summuss/anki-bridge/internal/parser"
 	"github.com/summuss/anki-bridge/internal/render"
 	"github.com/summuss/anki-bridge/internal/util"
+	"io"
+	"log"
+	"os"
 )
 
-func AddNotes(text string) error {
+func init() {
+	rootCmd.AddCommand(addNotesCMD)
+}
+
+var addNotesCMD = &cobra.Command{
+	Use:  "add_notes",
+	Args: cobra.MaximumNArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		var inputPath string
+		if len(args) == 0 {
+			inputPath = config.Conf.DefaultInputFile
+		} else {
+			inputPath = args[0]
+		}
+		fs, err := os.Open(inputPath)
+		if err != nil {
+			log.Printf("open file %s failed, %s", inputPath, err.Error())
+		}
+		bs, err := io.ReadAll(fs)
+		if err != nil {
+			log.Printf("read file %s failed, %s", inputPath, err.Error())
+		}
+		return addNotes(string(bs))
+
+	},
+}
+
+func addNotes(text string) error {
 	err := parser.CheckInput(text)
 	if err != nil {
 		return fmt.Errorf("input check error:\n%s", err.Error())
@@ -25,7 +56,7 @@ func AddNotes(text string) error {
 			err = (*m).Save(model.MongoClient, config.Conf.DBName)
 			if err != nil {
 				if _, ok := err.(model.ExistError); ok {
-					fmt.Printf("warnning: %s already existed, skip", desc)
+					log.Printf("warnning: %s already existed, skip", desc)
 					return nil
 				} else {
 					return fmt.Errorf("save %s to db failed,error:\n%s", desc, err.Error())
@@ -52,7 +83,7 @@ func AddNotes(text string) error {
 				resources, func(r *model.Resource) error {
 					err := anki.StoreMedia(r)
 					if err != nil {
-						fmt.Printf(
+						log.Printf(
 							"store %s to anki for %s failed, error:\n%s", r.Metadata.FileName, desc,
 							err.Error(),
 						)

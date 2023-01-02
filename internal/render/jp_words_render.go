@@ -32,7 +32,12 @@ func (j jpWordsRender) Process(m model.IModel) (*anki.Card, error) {
     </div>
 </div>
 `
-	var t = jpWordRenderObj{
+	var t = struct {
+		*model.JPWord
+		WordClass string
+		Pitch     string
+		Sound     string
+	}{
 		JPWord:    jpWord,
 		WordClass: renderWordClasses(jpWord.WordClasses),
 		Pitch:     renderPitch(jpWord.Pitch),
@@ -117,13 +122,6 @@ func renderSounds(rs *[]model.Resource) string {
 	return strings.Join(t, " ")
 }
 
-type jpWordRenderObj struct {
-	*model.JPWord
-	WordClass string
-	Pitch     string
-	Sound     string
-}
-
 func (j jpWordsRender) Match(m model.IModel) bool {
-	return "jp_words" == m.CollectionName()
+	return "Jp Words" == m.GetNoteType()
 }

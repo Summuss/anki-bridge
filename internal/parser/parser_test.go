@@ -20,7 +20,7 @@ func Test_splitByNoteType(t *testing.T) {
 			name: "1",
 			args: args{
 				content: `
-Word
+- [[Word]]
 	W1
 		1-1
 		1-2

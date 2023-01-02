@@ -10,11 +10,15 @@ import (
 
 var jpSentencesParser = JPSentencesParser{}
 
+func init() {
+	*parsers = append(*parsers, jpSentencesParser)
+}
+
 type JPSentencesParser struct {
 }
 
-func (J JPSentencesParser) NoteName() string {
-	return "Jp Sentences"
+func (J JPSentencesParser) Match(noteName string) bool {
+	return "Jp Sentences" == noteName
 }
 
 func (J JPSentencesParser) Split(rawNotes string) ([]string, error) {

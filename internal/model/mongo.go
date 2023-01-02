@@ -11,6 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/gridfs"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"log"
 	"reflect"
 	"time"
 )
@@ -143,7 +144,7 @@ func (d *Dao[T]) loadResources(t T) error {
 			return err
 		}
 		if len(rs) != rsiSize {
-			fmt.Printf("warnning: resource id's num:%d ,only %d found", rsiSize, len(rs))
+			log.Printf("warnning: resource id's num:%d ,only %d found", rsiSize, len(rs))
 		}
 		err = util.DoParallel(
 			&rs,

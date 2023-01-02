@@ -13,11 +13,15 @@ import (
 
 var jpWordsParser = JPWordsParser{}
 
+func init() {
+	*parsers = append(*parsers, &jpWordsParser)
+}
+
 type JPWordsParser struct {
 }
 
-func (w JPWordsParser) NoteName() string {
-	return "Jp Words"
+func (w JPWordsParser) Match(noteName string) bool {
+	return slices.Contains([]string{"Jp Words", "认识"}, noteName)
 }
 
 func (w JPWordsParser) Split(rowNotes string) ([]string, error) {

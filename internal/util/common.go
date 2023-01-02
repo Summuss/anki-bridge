@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/samber/lo"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"os/exec"
@@ -43,6 +44,7 @@ func Exec(prog string, arg ...string) (string, error) {
 }
 
 func CurlGetData(url string) (*[]byte, error) {
+	log.Printf("start to download %s\n", url)
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("download file from %s failed,%s", url, err.Error())
@@ -52,6 +54,8 @@ func CurlGetData(url string) (*[]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("download file from %s failed,%s", url, err.Error())
 	}
+	log.Printf("finish to download %s\n", url)
+
 	return &body, nil
 
 	tf, err := os.CreateTemp("", "tts.*.mp3")
@@ -61,7 +65,7 @@ func CurlGetData(url string) (*[]byte, error) {
 	defer os.Remove(tf.Name())
 	//curl '{url}' --output '{tmp_file}
 
-	fmt.Printf("download file from %s\n", url)
+	log.Printf("download file from %s\n", url)
 	_, err = Exec("curl", url, "--output", tf.Name())
 	if err != nil {
 		return nil, fmt.Errorf("download file from %s failed,%s", url, err.Error())

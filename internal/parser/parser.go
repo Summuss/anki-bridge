@@ -12,14 +12,14 @@ import (
 )
 
 type iParser interface {
-	NoteName() string
+	Match(noteName string) bool
 	Split(string) ([]string, error)
 	Check(string) error
 	Parse(string) (model.IModel, error)
 }
 
 var (
-	parsers = &[]iParser{jpWordsParser, jpSentencesParser}
+	parsers = &[]iParser{}
 )
 
 func splitByNoteType(content string) (map[string]string, error) {
@@ -34,6 +34,7 @@ func splitByNoteType(content string) (map[string]string, error) {
 	noteTypeName2SubTxt := make(map[string]string)
 	for i, match := range matches {
 		noteTypeName := strings.TrimSpace(match)
+		noteTypeName = computeRealNoteName(noteTypeName)
 		note := strings.TrimSpace(util.UnIndent(splits[i+1]))
 
 		if len(noteTypeName) == 0 || len(note) == 0 {
@@ -134,6 +135,7 @@ func Parse(text string) (*[]model.IModel, error) {
 			err := util.DoParallel(
 				&notes, func(note *string) error {
 					m, err := parser.Parse(*note)
+					m.SetNoteType(noteName)
 					if err != nil {
 						return err
 					}
@@ -155,7 +157,7 @@ func Parse(text string) (*[]model.IModel, error) {
 func findParser(noteName string) (iParser, error) {
 	parserFlt := lo.Filter(
 		*parsers, func(item iParser, index int) bool {
-			return item.NoteName() == computeRealNoteName(noteName)
+			return item.Match(noteName)
 		},
 	)
 	if len(parserFlt) < 1 {

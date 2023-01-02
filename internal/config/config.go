@@ -26,7 +26,8 @@ func init() {
 }
 
 type Config struct {
-	MongoConnectURL string `yaml:"mongo-connect-url"`
-	DBName          string `yaml:"db-name"`
-	AnkiAPIURL      string `yaml:"anki-api-url"`
+	MongoConnectURL  string `yaml:"mongo-connect-url"`
+	DBName           string `yaml:"db-name"`
+	AnkiAPIURL       string `yaml:"anki-api-url"`
+	DefaultInputFile string `yaml:"default-input-file"`
 }

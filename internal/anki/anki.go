@@ -94,7 +94,6 @@ func requestAnki(action string, params map[string]interface{}) (map[string]inter
 	if err != nil {
 		return nil, fmt.Errorf("requestAnki: %s,\n%s", err.Error(), string(jsonStr))
 	}
-	println(string(jsonStr))
 	var res map[string]interface{}
 	err = json.NewDecoder(resp.Body).Decode(&res)
 	if err != nil {
