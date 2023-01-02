@@ -60,7 +60,7 @@ func (j jpWordsRender) Process(m model.IModel) (*anki.Card, error) {
 	return &anki.Card{
 		Front: jpWord.Mean,
 		Back:  string(bts),
-		Desk:  "test",
+		Desk:  "Japanese::Words",
 	}, nil
 }
 

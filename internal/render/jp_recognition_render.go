@@ -57,7 +57,7 @@ func (j jpRecognitionRender) Process(m model.IModel) (*anki.Card, error) {
 	return &anki.Card{
 		Front: jpWord.Spell,
 		Back:  string(bts),
-		Desk:  "test",
+		Desk:  "Japanese::Recognition",
 	}, nil
 }
 

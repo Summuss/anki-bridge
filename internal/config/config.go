@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"gopkg.in/yaml.v3"
+	"log"
 	"os"
 )
 
@@ -25,6 +26,9 @@ func init() {
 	if len(Conf.TTScmd) == 0 {
 		panic("conf file error: tts-cmd is empty")
 	}
+	if !Conf.RealMode {
+		log.Println("warning: test mode on")
+	}
 
 }
 
@@ -34,4 +38,5 @@ type Config struct {
 	AnkiAPIURL       string   `yaml:"anki-api-url"`
 	DefaultInputFile string   `yaml:"default-input-file"`
 	TTScmd           []string `yaml:"tts-cmd"`
+	RealMode         bool     `yaml:"real-mode"`
 }

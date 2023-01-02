@@ -35,7 +35,7 @@ func (j jpSentencesRender) Process(m model.IModel) (*anki.Card, error) {
 	return &anki.Card{
 		Front: replaceCloze(jpSentence.Sentence),
 		Back:  strings.Join(words, "<hr><br>"),
-		Desk:  "test",
+		Desk:  "Japanese::Sentences",
 	}, nil
 }
 
