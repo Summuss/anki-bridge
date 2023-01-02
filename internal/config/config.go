@@ -9,7 +9,11 @@ import (
 var Conf *Config
 
 func init() {
-	yamlFile, err := os.ReadFile("conf.yml")
+	path := os.Getenv("ANKI_BRIDGE_CONF")
+	if len(path) == 0 {
+		path = "conf.yml"
+	}
+	yamlFile, err := os.ReadFile(path)
 	if err != nil {
 		panic(fmt.Errorf("yamlFile.Get err   #%v ", err))
 	}

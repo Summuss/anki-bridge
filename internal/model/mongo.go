@@ -200,6 +200,13 @@ func (d *Dao[T]) Save(model T, models ...T) error {
 				m.(T).SetUpdateTime(now)
 			}
 			// transaction disabled
+			for _, m := range insertMs {
+				t := m.(T)
+				err := d.CheckDuplication(t)
+				if err != nil {
+					return nil, err
+				}
+			}
 			res, err := d.getCollection().InsertMany(context.TODO(), insertMs)
 			if err != nil {
 				return nil, fmt.Errorf("insertMany failed, error:\n%s", err.Error())
@@ -238,6 +245,17 @@ func (d *Dao[T]) Save(model T, models ...T) error {
 
 	_, err = session.WithTransaction(context.Background(), callback)
 	return err
+}
+
+func (d *Dao[T]) CheckDuplication(m T) error {
+	count, err := d.getCollection().CountDocuments(context.TODO(), m.duplicationCheckQuery())
+	if err != nil {
+		return fmt.Errorf("error happend when check duplication:%s", err.Error())
+	}
+	if count > 0 {
+		return ExistError{}
+	}
+	return nil
 }
 
 func (d *Dao[T]) Delete(model T, models ...T) error {

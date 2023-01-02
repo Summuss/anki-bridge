@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/samber/lo"
+	"io"
+	"net/http"
 	"os"
 	"os/exec"
 )
@@ -41,6 +43,17 @@ func Exec(prog string, arg ...string) (string, error) {
 }
 
 func CurlGetData(url string) (*[]byte, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("download file from %s failed,%s", url, err.Error())
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("download file from %s failed,%s", url, err.Error())
+	}
+	return &body, nil
+
 	tf, err := os.CreateTemp("", "tts.*.mp3")
 	if err != nil {
 		return nil, err

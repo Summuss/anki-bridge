@@ -26,6 +26,7 @@ func AddNotes(text string) error {
 			if err != nil {
 				if _, ok := err.(model.ExistError); ok {
 					fmt.Printf("warnning: %s already existed, skip", desc)
+					return nil
 				} else {
 					return fmt.Errorf("save %s to db failed,error:\n%s", desc, err.Error())
 				}

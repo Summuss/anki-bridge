@@ -15,8 +15,8 @@ var (
 )
 
 type IModel interface {
-	CollectionName() string
 
+	// for BaseModel Impl
 	SetID(id primitive.ObjectID)
 	GetID() primitive.ObjectID
 
@@ -34,8 +34,11 @@ type IModel interface {
 
 	SetAnkiNoteId(int64)
 
+	// for Concrete Model Impl
+	CollectionName() string
 	Save(client *mongo.Client, dbName string) error
 	Desc() string
+	duplicationCheckQuery() interface{}
 }
 
 type BaseModel struct {
@@ -145,6 +148,10 @@ func (j *JPWord) Desc() string {
 	return j.CollectionName() + ":" + j.Spell
 }
 
+func (j *JPWord) duplicationCheckQuery() interface{} {
+	return bson.D{{"spell", j.Spell}, {"mean", j.Mean}}
+}
+
 type JPSentence struct {
 	BaseModel   `json:",inline" bson:",inline"`
 	Sentence    string     `json:"sentence" bson:"sentence"`
@@ -163,4 +170,7 @@ func (j *JPSentence) Save(client *mongo.Client, dbName string) error {
 	dao := GetDao(client, dbName, j)
 	return dao.Save(j)
 
+}
+func (j *JPSentence) duplicationCheckQuery() interface{} {
+	return bson.D{{"sentence", j.Sentence}}
 }

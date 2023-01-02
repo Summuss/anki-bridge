@@ -15,7 +15,7 @@ func TestAddNotes(t *testing.T) {
 			name: "1", args: args{
 				text: `
 - [[Jp Words]]
-	- 剰え
+	- 衰える
 		- 而且并且
 		- あまつさえ　1　１
 

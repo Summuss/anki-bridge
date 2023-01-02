@@ -1,6 +1,8 @@
 package anki
 
 import (
+	"io"
+	"net/http"
 	"reflect"
 	"testing"
 )
@@ -38,4 +40,18 @@ func Test_requestAnki(t *testing.T) {
 			},
 		)
 	}
+}
+
+func Test_Downlaod_data(t *testing.T) {
+	resp, err := http.Get("https://cache-a.oddcast.com/c_fs/8dfc5794d25cab8a28b2874f8b461044.mp3?engine=3&language=12&voice=4&text=%22%E5%89%B0%E3%81%88%22&useUTF8=1")
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		panic(err)
+	}
+	println(body)
+
 }

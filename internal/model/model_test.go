@@ -1,6 +1,8 @@
 package model
 
-import "go.mongodb.org/mongo-driver/mongo"
+import (
+	"go.mongodb.org/mongo-driver/mongo"
+)
 
 type UserModel struct {
 	BaseModel `json:",inline" bson:",inline"`
@@ -19,6 +21,9 @@ func (j *UserModel) Save(client *mongo.Client, dbName string) error {
 
 func (j *UserModel) Desc() string {
 	return j.CollectionName() + ":" + j.Name
+}
+func (j *UserModel) duplicationCheckQuery() interface{} {
+	return nil
 }
 
 type AddrModel struct {
