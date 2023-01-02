@@ -12,6 +12,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"sync"
 )
 
 func init() {
@@ -30,11 +31,11 @@ var addNotesCMD = &cobra.Command{
 		}
 		fs, err := os.Open(inputPath)
 		if err != nil {
-			log.Printf("open file %s failed, %s", inputPath, err.Error())
+			return fmt.Errorf("open file %s failed, %s", inputPath, err.Error())
 		}
 		bs, err := io.ReadAll(fs)
 		if err != nil {
-			log.Printf("read file %s failed, %s", inputPath, err.Error())
+			return fmt.Errorf("read file %s failed, %s", inputPath, err.Error())
 		}
 		return addNotes(string(bs))
 
@@ -50,13 +51,20 @@ func addNotes(text string) error {
 	if err != nil {
 		return fmt.Errorf("parse error:\n %s", err.Error())
 	}
-	return util.DoParallel(
+	var insertNumMu sync.Mutex
+	var skipNumMu sync.Mutex
+	var insertNum int
+	var skipNum int
+	err = util.DoParallel(
 		ms, func(m *model.IModel) error {
 			desc := (*m).Desc()
 			err = (*m).Save(model.MongoClient, config.Conf.DBName)
 			if err != nil {
 				if _, ok := err.(model.ExistError); ok {
 					log.Printf("warnning: %s already existed, skip", desc)
+					skipNumMu.Lock()
+					skipNum++
+					skipNumMu.Unlock()
 					return nil
 				} else {
 					return fmt.Errorf("save %s to db failed,error:\n%s", desc, err.Error())
@@ -92,9 +100,13 @@ func addNotes(text string) error {
 					return nil
 				},
 			)
-
+			insertNumMu.Lock()
+			insertNum = insertNum + 1
+			insertNumMu.Unlock()
 			return nil
 		},
 	)
+	log.Printf("insert/skip/total: %d/%d/%d\n", insertNum, skipNum, len(*ms))
+	return err
 
 }

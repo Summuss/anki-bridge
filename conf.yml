@@ -3,3 +3,6 @@ mongo-connect-url: "mongodb://mongoadmin:secret@daemon:27017/test?authSource=adm
 db-name: test
 anki-api-url: "http://192.168.162.1:8766"
 default-input-file: /tmp
+tts-cmd:
+  - /usr/bin/node
+  - /home/summus/Code/script/python-script/jp_study/oddcast_api.js

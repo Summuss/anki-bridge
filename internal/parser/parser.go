@@ -135,10 +135,10 @@ func Parse(text string) (*[]model.IModel, error) {
 			err := util.DoParallel(
 				&notes, func(note *string) error {
 					m, err := parser.Parse(*note)
-					m.SetNoteType(noteName)
 					if err != nil {
 						return err
 					}
+					m.SetNoteType(noteName)
 					imodels.Add(m)
 					return nil
 				},
@@ -150,6 +150,10 @@ func Parse(text string) (*[]model.IModel, error) {
 		}()
 	}
 	wg.Wait()
+	err := util.MergeErrors(errList.ToSlice())
+	if err != nil {
+		return nil, err
+	}
 	res = imodels.ToSlice()
 	return &res, nil
 }
