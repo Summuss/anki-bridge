@@ -29,7 +29,7 @@ func (w JPWordsParser) Split(rowNotes string) ([]string, error) {
 	return util.SplitByNoIndentLine(rowNotes)
 }
 
-func (w JPWordsParser) Check(note string) error {
+func (w JPWordsParser) Check(note string, _ string) error {
 	notePreproc := util.PreprocessNote(note)
 	r, _ := regexp.Compile(`(?m)\A\s*^-\s*(?P<word>\S+)$\n^\t-\s*(?P<meaning>\S+.*)$\n^\t-\s*(?P<hiragana>\S+)\s+(?P<pitch>\d)\s+(?P<classes>.+)$\s*\z`)
 	if !r.MatchString(notePreproc) {
@@ -50,7 +50,7 @@ func (w JPWordsParser) Check(note string) error {
 	return nil
 }
 
-func (w JPWordsParser) Parse(note string) (model.IModel, error) {
+func (w JPWordsParser) Parse(note string, noteType string) (model.IModel, error) {
 	notePreproc := util.PreprocessNote(note)
 	r, _ := regexp.Compile(`(?m)\A\s*^-\s*(?P<word>\S+)$\n^\t-\s*(?P<meaning>\S+.*)$\n^\t-\s*(?P<hiragana>\S+)\s+(?P<pitch>\d)\s+(?P<classes>.+)$\s*\z`)
 	submatches := r.FindStringSubmatch(notePreproc)
@@ -114,7 +114,6 @@ func checkWordClass(class string) error {
 
 func getTTSURL(txt string) (maleURL string, femaleURL string, err error) {
 	txt = "\"" + txt + "\""
-	//FIXME
 	args := config.Conf.TTScmd
 	args = append(args, txt, "takeru")
 	res1, err := util.Exec(args[0], args[1:]...)

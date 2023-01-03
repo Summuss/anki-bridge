@@ -12,10 +12,10 @@ import (
 )
 
 type iParser interface {
-	Match(noteName string) bool
+	Match(noteType string) bool
 	Split(string) ([]string, error)
-	Check(string) error
-	Parse(string) (model.IModel, error)
+	Check(note string, noteType string) error
+	Parse(note string, noteType string) (model.IModel, error)
 }
 
 var (
@@ -102,7 +102,7 @@ func checkNotes(notes []string, p iParser) error {
 		note := note
 		go func() {
 			defer wg.Done()
-			err := p.Check(note)
+			err := p.Check(note, "")
 			if err != nil {
 				errList.Add(err)
 			}
@@ -134,7 +134,7 @@ func Parse(text string) (*[]model.IModel, error) {
 			notes, _ := parser.Split(subTxt)
 			err := util.DoParallel(
 				&notes, func(note *string) error {
-					m, err := parser.Parse(*note)
+					m, err := parser.Parse(*note, noteName)
 					if err != nil {
 						return err
 					}

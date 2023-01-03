@@ -25,7 +25,7 @@ func (J JPSentencesParser) Split(rawNotes string) ([]string, error) {
 	return util.SplitByNoIndentLine(rawNotes)
 }
 
-func (J JPSentencesParser) Check(note string) error {
+func (J JPSentencesParser) Check(note string, _ string) error {
 	notePreproc := util.PreprocessNote(note)
 	r, _ := regexp.Compile(`(?m)\A\s*^-\s*(?P<Sentence>\S+.*$)(?P<Words>(\n^\t-\s*.+$\n^\t\t-\s*.+$\n^\t\t-\s*.+$)+)\s*\z`)
 	if !r.MatchString(notePreproc) {
@@ -40,7 +40,7 @@ func (J JPSentencesParser) Check(note string) error {
 	}
 	errorList := lo.Map(
 		word_notes, func(item string, _ int) error {
-			err = jpWordsParser.Check(item)
+			err = jpWordsParser.Check(item, "")
 			if err != nil {
 				return fmt.Errorf("%s\nin note:\n%s", err.Error(), note)
 			}
@@ -50,7 +50,7 @@ func (J JPSentencesParser) Check(note string) error {
 	return util.MergeErrors(errorList)
 }
 
-func (J JPSentencesParser) Parse(note string) (model.IModel, error) {
+func (J JPSentencesParser) Parse(note string, noteType string) (model.IModel, error) {
 	notePreproc := util.PreprocessNote(note)
 	r, _ := regexp.Compile(`(?m)\A\s*^-\s*(?P<Sentence>\S+.*$)(?P<Words>(\n^\t-\s*.+$\n^\t\t-\s*.+$\n^\t\t-\s*.+$)+)\s*\z`)
 	submatches := r.FindStringSubmatch(notePreproc)
@@ -61,7 +61,7 @@ func (J JPSentencesParser) Parse(note string) (model.IModel, error) {
 	var err error
 	words := lo.Map(
 		word_notes, func(item string, _ int) *model.JPWord {
-			word, e := jpWordsParser.Parse(item)
+			word, e := jpWordsParser.Parse(item, "")
 			if e != nil {
 				err = e
 				return nil

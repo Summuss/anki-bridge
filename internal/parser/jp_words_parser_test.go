@@ -117,7 +117,7 @@ func TestJPWordsParser_Check(t *testing.T) {
 		t.Run(
 			tt.name, func(t *testing.T) {
 				w := JPWordsParser{}
-				if err := w.Check(tt.args.note); (err != nil) != tt.wantErr {
+				if err := w.Check(tt.args.note, ""); (err != nil) != tt.wantErr {
 					t.Errorf("Check() error = %v, wantErr %v", err, tt.wantErr)
 				}
 			},
@@ -160,7 +160,7 @@ func TestJPWordsParser_Parse(t *testing.T) {
 		t.Run(
 			tt.name, func(t *testing.T) {
 				w := JPWordsParser{}
-				got, err := w.Parse(tt.args.note)
+				got, err := w.Parse(tt.args.note, "")
 				if (err != nil) != tt.wantErr {
 					t.Errorf("Parse() error = %v, wantErr %v", err, tt.wantErr)
 					return
