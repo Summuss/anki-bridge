@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/summuss/anki-bridge/internal/anki"
+	"github.com/summuss/anki-bridge/internal/common"
 	"github.com/summuss/anki-bridge/internal/config"
 	"github.com/summuss/anki-bridge/internal/model"
 	"github.com/summuss/anki-bridge/internal/parser"
 	"github.com/summuss/anki-bridge/internal/render"
-	"github.com/summuss/anki-bridge/internal/util"
 	"io"
 	"log"
 	"os"
@@ -55,7 +55,7 @@ func addNotes(text string) error {
 	var skipNumMu sync.Mutex
 	var insertNum int
 	var skipNum int
-	err = util.DoParallel(
+	err = common.DoParallel(
 		ms, func(m *model.IModel) error {
 			desc := (*m).Desc()
 			err = (*m).Save(model.MongoClient, config.Conf.DBName)
@@ -87,7 +87,7 @@ func addNotes(text string) error {
 				return fmt.Errorf("write note id back for %s failed,error:\n%s", desc, err.Error())
 			}
 			resources := (*m).GetResources()
-			_ = util.DoParallel(
+			_ = common.DoParallel(
 				resources, func(r *model.Resource) error {
 					err := anki.StoreMedia(r)
 					if err != nil {

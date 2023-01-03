@@ -91,7 +91,7 @@ xx
 	for _, tt := range tests {
 		t.Run(
 			tt.name, func(t *testing.T) {
-				J := JPSentencesParser{}
+				J := JPSentencesParser1{}
 				if err := J.Check(tt.args.note, ""); (err != nil) != tt.wantErr {
 					t.Errorf("Check() error = %v, wantErr %v", err, tt.wantErr)
 				}
@@ -141,7 +141,7 @@ func TestJPSentencesParser_Parse(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(
 			tt.name, func(t *testing.T) {
-				J := JPSentencesParser{}
+				J := JPSentencesParser1{}
 				got, err := J.Parse(tt.args.note, "")
 				if (err != nil) != tt.wantErr {
 					t.Errorf("Parse() error = %v, wantErr %v", err, tt.wantErr)

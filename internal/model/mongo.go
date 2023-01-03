@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/summuss/anki-bridge/internal/common"
 	"github.com/summuss/anki-bridge/internal/config"
-	"github.com/summuss/anki-bridge/internal/util"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -69,7 +69,7 @@ func (d *Dao[T]) FindMany(query interface{}) (*[]T, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = util.DoParallel(
+	err = common.DoParallel(
 		&res, func(t *T) error {
 			err = d.loadResources(*t)
 			if err != nil {
@@ -89,8 +89,8 @@ func (d *Dao[T]) saveResources(t T) error {
 	if t.GetResources() == nil || len(*t.GetResources()) == 0 {
 		return nil
 	}
-	ris := util.SafeList[primitive.ObjectID]{}
-	err := util.DoParallel(
+	ris := common.SafeList[primitive.ObjectID]{}
+	err := common.DoParallel(
 		t.GetResources(), func(r *Resource) error {
 			if len(r.Metadata.FileName) == 0 {
 				return fmt.Errorf("file name is empty")
@@ -146,7 +146,7 @@ func (d *Dao[T]) loadResources(t T) error {
 		if len(rs) != rsiSize {
 			log.Printf("warnning: resource id's num:%d ,only %d found", rsiSize, len(rs))
 		}
-		err = util.DoParallel(
+		err = common.DoParallel(
 			&rs,
 			func(r *Resource) error {
 				if r.Length == 0 {
@@ -216,7 +216,7 @@ func (d *Dao[T]) Save(model T, models ...T) error {
 				objectID := id.(primitive.ObjectID)
 				insertMs[i].(T).SetID(objectID)
 			}
-			err = util.DoParallel(
+			err = common.DoParallel(
 				&insertMs, func(i *interface{}) error {
 					return d.saveResources((*i).(T))
 				},

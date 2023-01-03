@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/summuss/anki-bridge/internal/common"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -33,8 +34,8 @@ type IModel interface {
 
 	SetAnkiNoteId(int64)
 
-	SetNoteType(noteType string)
-	GetNoteType() string
+	SetNoteType(noteType common.NoteType)
+	GetNoteType() common.NoteType
 
 	// for Concrete Model Impl
 	CollectionName() string
@@ -49,7 +50,7 @@ type BaseModel struct {
 	UpdateTime  primitive.DateTime    `json:"update_time" bson:"update_time"`
 	ChangeFlag  string                `json:"change_flag"  bson:"change_flag"`
 	AnkiNoteId  int64                 `json:"anki_note_id"  bson:"anki_note_id"`
-	NoteType    string                `json:"note_type"bson:"note_type"`
+	NoteType    common.NoteType       `json:"note_type"bson:"note_type"`
 	Resources   *[]primitive.ObjectID `json:"resources" bson:"resources"`
 	resources   *[]Resource
 }
@@ -94,10 +95,10 @@ func (m *BaseModel) SetResourceIDs(ris *[]primitive.ObjectID) {
 func (m *BaseModel) SetAnkiNoteId(id int64) {
 	m.AnkiNoteId = id
 }
-func (m *BaseModel) SetNoteType(noteType string) {
+func (m *BaseModel) SetNoteType(noteType common.NoteType) {
 	m.NoteType = noteType
 }
-func (m *BaseModel) GetNoteType() string {
+func (m *BaseModel) GetNoteType() common.NoteType {
 	return m.NoteType
 }
 

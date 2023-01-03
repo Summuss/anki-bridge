@@ -3,9 +3,9 @@ package parser
 import (
 	"fmt"
 	"github.com/samber/lo"
+	"github.com/summuss/anki-bridge/internal/common"
 	"github.com/summuss/anki-bridge/internal/config"
 	"github.com/summuss/anki-bridge/internal/model"
-	"github.com/summuss/anki-bridge/internal/util"
 	"golang.org/x/exp/slices"
 	"regexp"
 	"strconv"
@@ -19,25 +19,26 @@ func init() {
 }
 
 type JPWordsParser struct {
+	baseParser
 }
 
-func (w JPWordsParser) Match(noteName string) bool {
-	return slices.Contains([]string{"Jp Words", "认识"}, noteName)
+func (w JPWordsParser) Match(note string, noteType common.NoteType) bool {
+	return slices.Contains(
+		[]common.NoteType{
+			common.NoteType_JPWords, common.NoteType_JPRecognition,
+		}, noteType,
+	)
 }
 
-func (w JPWordsParser) Split(rowNotes string) ([]string, error) {
-	return util.SplitByNoIndentLine(rowNotes)
-}
-
-func (w JPWordsParser) Check(note string, _ string) error {
-	notePreproc := util.PreprocessNote(note)
+func (w JPWordsParser) Check(note string, _ common.NoteType) error {
+	notePreproc := common.PreprocessNote(note)
 	r, _ := regexp.Compile(`(?m)\A\s*^-\s*(?P<word>\S+)$\n^\t-\s*(?P<meaning>\S+.*)$\n^\t-\s*(?P<hiragana>\S+)\s+(?P<pitch>\d)\s+(?P<classes>.+)$\s*\z`)
 	if !r.MatchString(notePreproc) {
 		return fmt.Errorf("synatx error in word\n%s", note)
 	}
 	submatches := r.FindStringSubmatch(notePreproc)
 	classesStr := submatches[r.SubexpIndex("classes")]
-	classes := util.SplitWithTrimAndOmitEmpty(classesStr, " ")
+	classes := common.SplitWithTrimAndOmitEmpty(classesStr, " ")
 	if len(classes) == 0 {
 		return fmt.Errorf("word classes not found in word\n%s", note)
 	}
@@ -50,12 +51,12 @@ func (w JPWordsParser) Check(note string, _ string) error {
 	return nil
 }
 
-func (w JPWordsParser) Parse(note string, noteType string) (model.IModel, error) {
-	notePreproc := util.PreprocessNote(note)
+func (w JPWordsParser) Parse(note string, noteType common.NoteType) (model.IModel, error) {
+	notePreproc := common.PreprocessNote(note)
 	r, _ := regexp.Compile(`(?m)\A\s*^-\s*(?P<word>\S+)$\n^\t-\s*(?P<meaning>\S+.*)$\n^\t-\s*(?P<hiragana>\S+)\s+(?P<pitch>\d)\s+(?P<classes>.+)$\s*\z`)
 	submatches := r.FindStringSubmatch(notePreproc)
 	classesStr := submatches[r.SubexpIndex("classes")]
-	classes := util.SplitWithTrimAndOmitEmpty(classesStr, " ")
+	classes := common.SplitWithTrimAndOmitEmpty(classesStr, " ")
 	word := submatches[r.SubexpIndex("word")]
 	meaning := submatches[r.SubexpIndex("meaning")]
 	hiragana := submatches[r.SubexpIndex("hiragana")]
@@ -70,11 +71,11 @@ func (w JPWordsParser) Parse(note string, noteType string) (model.IModel, error)
 	if err != nil {
 		return nil, err
 	}
-	data1, err := util.CurlGetData(maleURL)
+	data1, err := common.CurlGetData(maleURL)
 	if err != nil {
 		return nil, fmt.Errorf("download tts from %s failed,error:\n%s", maleURL, err.Error())
 	}
-	data2, err := util.CurlGetData(femaleURL)
+	data2, err := common.CurlGetData(femaleURL)
 	if err != nil {
 		return nil, fmt.Errorf("download tts from %s failed,error:\n%s", femaleURL, err.Error())
 	}
@@ -116,7 +117,7 @@ func getTTSURL(txt string) (maleURL string, femaleURL string, err error) {
 	txt = "\"" + txt + "\""
 	args := config.Conf.TTScmd
 	args = append(args, txt, "takeru")
-	res1, err := util.Exec(args[0], args[1:]...)
+	res1, err := common.Exec(args[0], args[1:]...)
 
 	if err != nil {
 		return "", "", fmt.Errorf(
@@ -124,7 +125,7 @@ func getTTSURL(txt string) (maleURL string, femaleURL string, err error) {
 		)
 	}
 	args[len(args)-1] = "sayaka"
-	res2, err := util.Exec(args[0], args[1:]...)
+	res2, err := common.Exec(args[0], args[1:]...)
 	if err != nil {
 		return "", "", fmt.Errorf(
 			"%s exec failed, %s", strings.Join(args, " "), err.Error(),

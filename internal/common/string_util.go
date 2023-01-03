@@ -1,4 +1,4 @@
-package util
+package common
 
 import (
 	"fmt"
@@ -12,7 +12,7 @@ func UnIndent(txt string) string {
 	return r.ReplaceAllString(txt, "")
 }
 
-func SplitByNoIndentLine(txt string) ([]string, error) {
+func SplitByNoIndentLine(txt string) (*[]string, error) {
 	r, _ := regexp.Compile(`(?m)^\S+.*$`)
 	split := r.Split(txt, -1)
 	if len(strings.TrimSpace(split[0])) > 0 {
@@ -24,7 +24,7 @@ func SplitByNoIndentLine(txt string) ([]string, error) {
 			return item + split[i+1]
 		},
 	)
-	return res, nil
+	return &res, nil
 }
 
 func PreprocessNote(note string) string {
