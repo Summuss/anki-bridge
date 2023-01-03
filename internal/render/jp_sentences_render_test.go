@@ -41,7 +41,16 @@ func Test_jpSentencesRender_Process(t *testing.T) {
 			name: "1",
 			args: args{
 				m: &model.JPSentence{
-					Sentence: "君の一生の思い出、 {{cloze しかと}} {{cloze  見届け}} たぞ。", JPWords: &words,
+					Sentence: "君の一生の思い出、 {{cloze しかと}} {{cloze  見届け}} たぞ。",
+					JPWords:  &words,
+					Addition: `- this is a cross line explanation
+  xxxx
+	- 2 level
+	  aaaa
+- this is explanation2
+	- xxx
+		- 2232
+		-`,
 				},
 			},
 			want: &anki.Card{
@@ -64,7 +73,26 @@ func Test_jpSentencesRender_Process(t *testing.T) {
         <span class="hira">あまつさえ</span> | ① [sound:衰える-male.mp3] [sound:衰える-female.mp3]
     </div>
 </div>
-`,
+<div class="addition"><ul>
+<li>this is a cross line explanation
+xxxx
+
+<ul>
+<li>2 level
+aaaa</li>
+</ul></li>
+<li>this is explanation2
+
+<ul>
+<li>xxx
+
+<ul>
+<li>2232
+-</li>
+</ul></li>
+</ul></li>
+</ul>
+</div>`,
 				Desk: "test",
 			},
 			wantErr: false,

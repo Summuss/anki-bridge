@@ -93,12 +93,10 @@ func TestJPSentencesParser2_Parse(t *testing.T) {
 		- xxx
 			- 2232
 			-
-
 `,
 			},
 			want: &model.JPSentence{
-				Addition: `
-- this is a cross line explanation
+				Addition: `- this is a cross line explanation
   xxxx
 	- 2 level
 	  aaaa

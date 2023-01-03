@@ -99,5 +99,7 @@ func (J JPSentencesParser2) Parse(note string, noteType common.NoteType) (model.
 	additionRaw := submatches[jpSentencesParser2Pattern.SubexpIndex("addition")]
 	additionRaw = common.UnIndent(additionRaw)
 
-	return &model.JPSentence{Sentence: sentence, JPWords: &words, Addition: additionRaw}, nil
+	return &model.JPSentence{
+		Sentence: sentence, JPWords: &words, Addition: strings.TrimSpace(additionRaw),
+	}, nil
 }

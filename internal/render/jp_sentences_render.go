@@ -2,9 +2,11 @@ package render
 
 import (
 	"fmt"
+	"github.com/gomarkdown/markdown"
 	"github.com/samber/lo"
 	"github.com/summuss/anki-bridge/internal/anki"
 	"github.com/summuss/anki-bridge/internal/model"
+
 	"regexp"
 	"strings"
 )
@@ -32,9 +34,15 @@ func (j jpSentencesRender) Process(m model.IModel) (*anki.Card, error) {
 	if e != nil {
 		return nil, fmt.Errorf("render word failed,error: %s", e.Error())
 	}
+	var addiHTML string
+	if len(jpSentence.Addition) > 0 {
+		bs := markdown.ToHTML([]byte(jpSentence.Addition), nil, nil)
+		addiHTML = string(bs)
+		addiHTML = fmt.Sprintf(`<div class="addition">%s</div>`, addiHTML)
+	}
 	return &anki.Card{
 		Front: replaceCloze(jpSentence.Sentence),
-		Back:  strings.Join(words, "<hr><br>"),
+		Back:  strings.Join(words, "<hr><br>") + addiHTML,
 		Desk:  "Japanese::Sentences",
 	}, nil
 }

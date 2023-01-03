@@ -3,6 +3,8 @@ module github.com/summuss/anki-bridge
 go 1.19
 
 require (
+	github.com/gomarkdown/markdown v0.0.0-20221013030248-663e2500819c
+	github.com/pkg/errors v0.9.1
 	github.com/samber/lo v1.37.0
 	github.com/spf13/cobra v1.6.1
 	go.mongodb.org/mongo-driver v1.11.1
@@ -15,7 +17,6 @@ require (
 	github.com/inconshreveable/mousetrap v1.0.1 // indirect
 	github.com/klauspost/compress v1.13.6 // indirect
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.1 // indirect

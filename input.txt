@@ -7,7 +7,22 @@
 		- にやにや　1　4
 
 - [[Jp Sentences]]
-	- 君の一生の思い出、 {{cloze しかと}} {{cloze  見届け}} たぞ。6
+	- 君の一生の思い出、 {{cloze しかと}} {{cloze  見届け}} たぞ。add1
+		- 確と #[[Jp Words]]
+			- 〔たしかに〕确实,明确,准确.
+			- しかと　2　４
+		- 見届ける#[[Jp Words]]
+			- 看到，看准，看清；一直看到最后，结束，用眼看，确认。（最後まで見る。また、しっかり見る。）
+			- みとどける　0　７
+		- this is a cross line explanation
+		  xxxx
+			- 2 level
+			  aaaa
+		- this is explanation2
+			- xxx
+				- 2232
+				-
+	- 君の一生の思い出、 {{cloze しかと}} {{cloze  見届け}} たぞ。add2
 		- 確と
 			- 〔たしかに〕确实,明确,准确.
 			- しかと　2　４
