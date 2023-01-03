@@ -10,6 +10,7 @@ type JPSentence struct {
 	BaseModel   `json:",inline" bson:",inline"`
 	Sentence    string     `json:"sentence" bson:"sentence"`
 	Explanation string     `json:"explanation" bson:"explanation"`
+	Addition    string     `json:"addition" bson:"addition"`
 	JPWords     *[]*JPWord `json:"jp_words" bson:"jp_words"`
 }
 

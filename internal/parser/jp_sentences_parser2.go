@@ -7,6 +7,7 @@ import (
 	"github.com/summuss/anki-bridge/internal/model"
 	"github.com/summuss/anki-bridge/internal/splitter"
 	"regexp"
+	"strings"
 )
 
 var jpSentencesParser2 = JPSentencesParser2{}
@@ -51,8 +52,12 @@ func (J JPSentencesParser2) Check(note string, _ common.NoteType) error {
 		return fmt.Errorf("note synatx error:\n%s", note)
 	}
 	submatches := jpSentencesParser2Pattern.FindStringSubmatch(notePreproc)
-	wordsRaw := submatches[jpSentencesParser2Pattern.SubexpIndex("Words")]
+	wordsRaw := submatches[jpSentencesParser2Pattern.SubexpIndex("words")]
 	wordsRaw = common.UnIndent(wordsRaw)
+	wordsRaw = strings.ReplaceAll(wordsRaw, "#[[Jp Words]]", "")
+	additionRaw := submatches[jpSentencesParser2Pattern.SubexpIndex("addition")]
+	additionRaw = common.UnIndent(additionRaw)
+
 	word_notes, err := splitter.Split(wordsRaw, common.NoteType_JPWords)
 	if err != nil {
 		return fmt.Errorf("%s\n in note:\n%s", err.Error(), note)
@@ -72,9 +77,10 @@ func (J JPSentencesParser2) Check(note string, _ common.NoteType) error {
 func (J JPSentencesParser2) Parse(note string, noteType common.NoteType) (model.IModel, error) {
 	notePreproc := common.PreprocessNote(note)
 	submatches := jpSentencesParser2Pattern.FindStringSubmatch(notePreproc)
-	sentence := submatches[jpSentencesParser2Pattern.SubexpIndex("Sentence")]
-	wordsRaw := submatches[jpSentencesParser2Pattern.SubexpIndex("Words")]
+	sentence := submatches[jpSentencesParser2Pattern.SubexpIndex("sentence")]
+	wordsRaw := submatches[jpSentencesParser2Pattern.SubexpIndex("words")]
 	wordsRaw = common.UnIndent(wordsRaw)
+	wordsRaw = strings.ReplaceAll(wordsRaw, "#[[Jp Words]]", "")
 	word_notes, _ := splitter.Split(wordsRaw, common.NoteType_JPWords)
 	var err error
 	words := lo.Map(
@@ -90,5 +96,8 @@ func (J JPSentencesParser2) Parse(note string, noteType common.NoteType) (model.
 	if err != nil {
 		return nil, fmt.Errorf("parse sentence `%s`failed, error:\n%s", sentence, err.Error())
 	}
-	return &model.JPSentence{Sentence: sentence, JPWords: &words}, nil
+	additionRaw := submatches[jpSentencesParser2Pattern.SubexpIndex("addition")]
+	additionRaw = common.UnIndent(additionRaw)
+
+	return &model.JPSentence{Sentence: sentence, JPWords: &words, Addition: additionRaw}, nil
 }
