@@ -20,11 +20,26 @@ var MongoClient *mongo.Client
 
 func init() {
 	var err error
+
 	MongoClient, err = mongo.Connect(
-		context.TODO(), options.Client().ApplyURI(config.Conf.MongoConnectURL),
+		context.TODO(),
+		options.Client().ApplyURI(config.Conf.MongoConnectURL).SetConnectTimeout(2*time.Second),
 	)
-	if err != nil {
-		log.Fatalf("init mongo failed, %s", err.Error())
+
+	ch := make(chan interface{})
+	go func() {
+		err = MongoClient.Ping(context.TODO(), nil)
+		if err != nil {
+			log.Fatalf("failed to connect to mongo server, %s", err.Error())
+		}
+		ch <- nil
+
+	}()
+	select {
+	case <-time.After(3 * time.Second):
+		log.Fatalf("failed to connect to mongo server")
+	case <-ch:
+		return
 	}
 }
 

@@ -31,10 +31,10 @@ var addNotesCMD = &cobra.Command{
 		for _, nt := range common.NoteTypeList {
 			targetDesk := config.Conf.NoteType2Desk[nt]
 			if targetDesk == "" {
-				return fmt.Errorf("[[%s]]'s target desck not specified", nt)
+				return fmt.Errorf("[[%s]]'s target desk not specified", nt)
 			}
 			if !slices.Contains(decks, targetDesk) {
-				return fmt.Errorf("[[%s]]'s target desck %s not exist", nt, targetDesk)
+				return fmt.Errorf("[[%s]]'s target desk %s not exist", nt, targetDesk)
 			}
 		}
 		return nil
