@@ -5,6 +5,8 @@ import (
 	"github.com/gomarkdown/markdown"
 	"github.com/samber/lo"
 	"github.com/summuss/anki-bridge/internal/anki"
+	"github.com/summuss/anki-bridge/internal/common"
+	"github.com/summuss/anki-bridge/internal/config"
 	"github.com/summuss/anki-bridge/internal/model"
 
 	"regexp"
@@ -43,7 +45,7 @@ func (j jpSentencesRender) Process(m model.IModel) (*anki.Card, error) {
 	return &anki.Card{
 		Front: replaceCloze(jpSentence.Sentence),
 		Back:  strings.Join(words, "<hr><br>") + addiHTML,
-		Desk:  "Japanese::Sentences",
+		Desk:  config.Conf.NoteType2Desk[common.NoteType_JPSentences],
 	}, nil
 }
 

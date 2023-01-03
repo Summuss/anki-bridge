@@ -55,3 +55,15 @@ func Test_Downlaod_data(t *testing.T) {
 	println(body)
 
 }
+
+func TestGetAllDecks(t *testing.T) {
+	decks, err := GetAllDecks()
+	if err != nil {
+		t.Error(err.Error())
+		return
+	}
+	if len(decks) == 0 {
+		t.Errorf("desk not found")
+	}
+
+}

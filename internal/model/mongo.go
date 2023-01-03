@@ -24,7 +24,7 @@ func init() {
 		context.TODO(), options.Client().ApplyURI(config.Conf.MongoConnectURL),
 	)
 	if err != nil {
-		panic(err)
+		log.Fatalf("init mongo failed, %s", err.Error())
 	}
 }
 

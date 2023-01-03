@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
+	"github.com/samber/lo"
 	"github.com/summuss/anki-bridge/internal/config"
 	"github.com/summuss/anki-bridge/internal/model"
 	"net/http"
@@ -80,6 +81,20 @@ func StoreMedia(resource *model.Resource) error {
 	}
 	_, err := requestAnki("storeMediaFile", params)
 	return err
+}
+
+func GetAllDecks() ([]string, error) {
+	res, err := requestAnki("deckNames", map[string]interface{}{})
+	if err != nil {
+		return nil, fmt.Errorf("fetch desk names failed, %s", err.Error())
+	}
+	datas := res["result"].([]interface{})
+	deskNames := lo.Map(
+		datas, func(item interface{}, _ int) string {
+			return item.(string)
+		},
+	)
+	return deskNames, nil
 }
 
 func requestAnki(action string, params map[string]interface{}) (map[string]interface{}, error) {

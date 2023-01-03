@@ -9,6 +9,7 @@ import (
 	"github.com/summuss/anki-bridge/internal/model"
 	"github.com/summuss/anki-bridge/internal/parser"
 	"github.com/summuss/anki-bridge/internal/render"
+	"golang.org/x/exp/slices"
 	"io"
 	"log"
 	"os"
@@ -22,6 +23,22 @@ func init() {
 var addNotesCMD = &cobra.Command{
 	Use:  "add_notes",
 	Args: cobra.MaximumNArgs(1),
+	PreRunE: func(cmd *cobra.Command, args []string) error {
+		decks, err := anki.GetAllDecks()
+		if err != nil {
+			return err
+		}
+		for _, nt := range common.NoteTypeList {
+			targetDesk := config.Conf.NoteType2Desk[nt]
+			if targetDesk == "" {
+				return fmt.Errorf("[[%s]]'s target desck not specified", nt)
+			}
+			if !slices.Contains(decks, targetDesk) {
+				return fmt.Errorf("[[%s]]'s target desck %s not exist", nt, targetDesk)
+			}
+		}
+		return nil
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var inputPath string
 		if len(args) == 0 {

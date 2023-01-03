@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"github.com/samber/lo"
 	"github.com/summuss/anki-bridge/internal/anki"
+	"github.com/summuss/anki-bridge/internal/common"
+	"github.com/summuss/anki-bridge/internal/config"
 	"github.com/summuss/anki-bridge/internal/model"
 	"html/template"
 	"io"
@@ -60,7 +62,7 @@ func (j jpWordsRender) Process(m model.IModel) (*anki.Card, error) {
 	return &anki.Card{
 		Front: jpWord.Mean,
 		Back:  string(bts),
-		Desk:  "Japanese::Words",
+		Desk:  config.Conf.NoteType2Desk[common.NoteType_JPWords],
 	}, nil
 }
 

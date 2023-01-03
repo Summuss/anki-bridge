@@ -1,7 +1,7 @@
 package config
 
 import (
-	"fmt"
+	"github.com/summuss/anki-bridge/internal/common"
 	"gopkg.in/yaml.v3"
 	"log"
 	"os"
@@ -16,15 +16,15 @@ func init() {
 	}
 	yamlFile, err := os.ReadFile(path)
 	if err != nil {
-		panic(fmt.Errorf("yamlFile.Get err   #%v ", err))
+		log.Fatalf("yamlFile.Get err   #%v ", err)
 	}
 
 	err = yaml.Unmarshal(yamlFile, &Conf)
 	if err != nil {
-		panic(fmt.Errorf("parse yml failed: %v", err))
+		log.Fatalf("parse yml failed: %v", err)
 	}
 	if len(Conf.TTScmd) == 0 {
-		panic("conf file error: tts-cmd is empty")
+		log.Fatalf("conf file error: tts-cmd is empty")
 	}
 	if !Conf.RealMode {
 		log.Println("warning: test mode on")
@@ -33,10 +33,11 @@ func init() {
 }
 
 type Config struct {
-	MongoConnectURL  string   `yaml:"mongo-connect-url"`
-	DBName           string   `yaml:"db-name"`
-	AnkiAPIURL       string   `yaml:"anki-api-url"`
-	DefaultInputFile string   `yaml:"default-input-file"`
-	TTScmd           []string `yaml:"tts-cmd"`
-	RealMode         bool     `yaml:"real-mode"`
+	MongoConnectURL  string                     `yaml:"mongo-connect-url"`
+	DBName           string                     `yaml:"db-name"`
+	AnkiAPIURL       string                     `yaml:"anki-api-url"`
+	DefaultInputFile string                     `yaml:"default-input-file"`
+	TTScmd           []string                   `yaml:"tts-cmd"`
+	RealMode         bool                       `yaml:"real-mode"`
+	NoteType2Desk    map[common.NoteType]string `yaml:"note-type-2-desk"`
 }

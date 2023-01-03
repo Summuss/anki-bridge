@@ -7,3 +7,7 @@ default-input-file: /tmp
 tts-cmd:
   - /usr/bin/node
   - /home/summus/Code/script/python-script/jp_study/oddcast_api.js
+note-type-2-desk:
+  Jp Words: Japanese::Words
+  Jp Sentences: Japanese::Sentences
+  认识: Japanese::Recognition

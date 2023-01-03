@@ -3,6 +3,8 @@ package render
 import (
 	"bytes"
 	"github.com/summuss/anki-bridge/internal/anki"
+	"github.com/summuss/anki-bridge/internal/common"
+	"github.com/summuss/anki-bridge/internal/config"
 	"github.com/summuss/anki-bridge/internal/model"
 	"html/template"
 	"io"
@@ -57,7 +59,7 @@ func (j jpRecognitionRender) Process(m model.IModel) (*anki.Card, error) {
 	return &anki.Card{
 		Front: jpWord.Spell,
 		Back:  string(bts),
-		Desk:  "Japanese::Recognition",
+		Desk:  config.Conf.NoteType2Desk[common.NoteType_JPRecognition],
 	}, nil
 }
 
