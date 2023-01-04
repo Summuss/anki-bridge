@@ -38,6 +38,7 @@ type Config struct {
 	AnkiAPIURL       string                     `yaml:"anki-api-url"`
 	DefaultInputFile string                     `yaml:"default-input-file"`
 	TTScmd           []string                   `yaml:"tts-cmd"`
+	BackupCmd        [][]string                 `yaml:"backup-cmd"`
 	RealMode         bool                       `yaml:"real-mode"`
 	NoteType2Desk    map[common.NoteType]string `yaml:"note-type-2-desk"`
 }

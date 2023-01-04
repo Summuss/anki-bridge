@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 	"github.com/summuss/anki-bridge/internal/anki"
 	"github.com/summuss/anki-bridge/internal/common"
@@ -13,11 +14,20 @@ import (
 	"io"
 	"log"
 	"os"
+	"strings"
 	"sync"
+	"time"
 )
+
+var PreBackUpFlg bool
 
 func init() {
 	rootCmd.AddCommand(addNotesCMD)
+	addNotesCMD.Flags().BoolVarP(
+		&PreBackUpFlg,
+		"pre-backup", "b",
+		false, "backup db before add notes execute",
+	)
 }
 
 var addNotesCMD = &cobra.Command{
@@ -35,6 +45,12 @@ var addNotesCMD = &cobra.Command{
 			}
 			if !slices.Contains(decks, targetDesk) {
 				return fmt.Errorf("[[%s]]'s target desk %s not exist", nt, targetDesk)
+			}
+		}
+		if PreBackUpFlg {
+			err := backupDB()
+			if err != nil {
+				return err
 			}
 		}
 		return nil
@@ -126,4 +142,33 @@ func addNotes(text string) error {
 	log.Printf("insert/skip/total: %d/%d/%d\n", insertNum, skipNum, len(*ms))
 	return err
 
+}
+func backupDB() error {
+	if len(config.Conf.BackupCmd) == 0 {
+		return fmt.Errorf("backup db failed: backup-cmd not found")
+
+	}
+	timeFormat := "2006-01-02#15:04:05"
+	dictionaryName := time.Now().Format(timeFormat)
+	for _, cmd := range config.Conf.BackupCmd {
+		cmd = lo.Map(
+			cmd, func(item string, _ int) string {
+				return strings.ReplaceAll(item, "$1", dictionaryName)
+			},
+		)
+		_, err := common.Exec(cmd[0], cmd[1:]...)
+		if err != nil {
+			return fmt.Errorf("backup db failed, %s", err.Error())
+		}
+
+	}
+	log.Println("backup db successfully")
+	return nil
+
+	/*	backup_dest_in_container := "/data/db/bak/{dest}"
+
+		cmd := "docker exec mongo mongodump  -d anki -u {MONGO_USER} -p {MONGO_PASSWD} --authenticationDatabase admin  -o {backup_dest_in_container}"
+		run_remote_cmd(cmd)
+		run_remote_cmd("mv /home/summus/docker-data/mongodb/bak/{dest} /home/summus/bak/mongo")
+	*/
 }

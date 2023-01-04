@@ -4,6 +4,9 @@ mongo-connect-url: "mongodb://mongoadmin:secret@daemon:27017/test?authSource=adm
 db-name: test
 anki-api-url: "http://192.168.162.1:8766"
 default-input-file: /tmp
+backup-cmd:
+  - [ ssh,summus@daemon,docker,exec,mongo,mongodump,-d anki,-u mongoadmin,-p secret,--authenticationDatabase admin,-o /data/db/bak/$1 ]
+#  - [ ssh,summus@daemon,mv,/home/summus/docker-data/mongodb/bak/$1, /home/summus/bak/mongo ]
 tts-cmd:
   - /usr/bin/node
   - /home/summus/Code/script/python-script/jp_study/oddcast_api.js

@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"os/exec"
+	"strings"
 )
 
 func MergeErrors(errList []error) error {
@@ -36,7 +37,10 @@ func Exec(prog string, arg ...string) (string, error) {
 
 	err := command.Run()
 	if err != nil {
-		return "", fmt.Errorf("%s. stderr:\n%s\n", err.Error(), stderr.String())
+		return "", fmt.Errorf(
+			"exec [%s %s]. %s. stderr:\n%s\n", prog, strings.Join(arg, " "), err.Error(),
+			stderr.String(),
+		)
 	}
 	return stdout.String(), nil
 }
