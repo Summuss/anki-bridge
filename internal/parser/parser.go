@@ -10,7 +10,7 @@ import (
 	"golang.org/x/exp/slices"
 	"regexp"
 	"strings"
-	"sync"
+	"time"
 )
 
 type iParser interface {
@@ -62,65 +62,63 @@ func CheckInput(txt string) error {
 	if err != nil {
 		return err
 	}
-	var wg sync.WaitGroup
 	size := len(noteTypeName2SubTxt)
 	if size == 0 {
 		return nil
 	}
-	wg.Add(size)
-
-	errList := common.SafeList[error]{}
+	errCh := make(chan error, size)
 	for noteName, subTxt := range noteTypeName2SubTxt {
 		noteName := noteName
 		subTxt := subTxt
 		go func() {
-			defer wg.Done()
 			notes, err := splitter.Split(subTxt, noteName)
 			if err != nil {
-				errList.Add(err)
+				errCh <- err
 				return
 			}
 
-			_ = common.DoParallel(
+			err = common.DoParallel(
 				notes, func(note *string) error {
 					parser, err := findParser(noteName, *note)
 					if err != nil {
-						errList.Add(err)
 						return err
 					}
 					err = parser.Check(*note, noteName)
 					if err != nil {
-						errList.Add(err)
 						return err
 					}
 					return nil
 				},
 			)
-
+			errCh <- err
 		}()
 	}
-	wg.Wait()
-	return common.MergeErrors(errList.ToSlice())
+	var errList []error
+	for i := 0; i < size; i++ {
+		errList = append(errList, <-errCh)
+	}
+	return common.MergeErrors(errList)
 }
 
 func Parse(text string) (*[]model.IModel, error) {
 	var res []model.IModel
 	noteTypeName2SubTxt, _ := splitByNoteType(text)
-	var wg sync.WaitGroup
 	size := len(noteTypeName2SubTxt)
 	if size == 0 {
 		return &res, nil
 	}
-	wg.Add(size)
 
-	errList := common.SafeList[error]{}
-	imodels := common.SafeList[model.IModel]{}
+	modelCh := make(chan model.IModel, 10)
+	errCh := make(chan error, size)
+	countCh := make(chan int, size)
 
 	for noteName, subTxt := range noteTypeName2SubTxt {
 		noteName := noteName
 		subTxt := subTxt
 		go func() {
-			defer wg.Done()
+			defer func() {
+				countCh <- 1
+			}()
 			notes, _ := splitter.Split(subTxt, noteName)
 			err := common.DoParallel(
 				notes, func(note *string) error {
@@ -130,22 +128,40 @@ func Parse(text string) (*[]model.IModel, error) {
 						return err
 					}
 					m.SetNoteType(noteName)
-					imodels.Add(m)
+					modelCh <- m
 					return nil
 				},
 			)
 			if err != nil {
-				errList.Add(err)
+				errCh <- err
 				return
 			}
 		}()
 	}
-	wg.Wait()
-	err := common.MergeErrors(errList.ToSlice())
+	var count int
+	for {
+		if count == size {
+			close(errCh)
+			close(modelCh)
+			break
+		}
+		select {
+		case m := <-modelCh:
+			res = append(res, m)
+		case <-countCh:
+			count++
+		default:
+			time.Sleep(20 * time.Millisecond)
+		}
+	}
+	for m := range modelCh {
+		res = append(res, m)
+	}
+
+	err := common.MergeErrors(lo.ChannelToSlice(errCh))
 	if err != nil {
 		return nil, err
 	}
-	res = imodels.ToSlice()
 	return &res, nil
 }
 

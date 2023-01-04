@@ -1,6 +1,8 @@
 package common
 
-import "sync"
+import (
+	"sync"
+)
 
 type SafeList[T any] struct {
 	data []T
@@ -19,43 +21,40 @@ func (receiver *SafeList[T]) ToSlice() []T {
 
 func DoParallel[T any](list *[]T, processor func(*T) error) error {
 	size := len(*list)
-	var wg sync.WaitGroup
-	wg.Add(size)
-
-	errList := SafeList[error]{}
+	errList := make([]error, 0, size)
+	ch := make(chan error, size)
 	for i := 0; i < size; i++ {
 		i := i
 		go func() {
-			defer wg.Done()
 			err := processor(&(*list)[i])
-			if err != nil {
-				errList.Add(err)
-				return
-			}
+			ch <- err
 		}()
 	}
-	wg.Wait()
-	return MergeErrors(errList.ToSlice())
+	for i := 0; i < size; i++ {
+		err := <-ch
+		if err != nil {
+			errList = append(errList, err)
+		}
+	}
+	return MergeErrors(errList)
 }
 
 func ComputeParallel[T any, R any](list *[]T, processor func(*T) (*R, error)) (*[]*R, *[]error) {
 	size := len(*list)
-	var wg sync.WaitGroup
-	wg.Add(size)
-
-	errList := SafeList[error]{}
-	resList := SafeList[*R]{}
+	resCh := make(chan [2]interface{}, size)
 	for i := 0; i < size; i++ {
 		i := i
 		go func() {
-			defer wg.Done()
 			res, err := processor(&(*list)[i])
-			resList.Add(res)
-			errList.Add(err)
+			resCh <- [2]interface{}{res, err}
 		}()
 	}
-	wg.Wait()
-	rs := resList.ToSlice()
-	errs := errList.ToSlice()
-	return &rs, &errs
+	errList := make([]error, 0, size)
+	resList := make([]*R, 0, size)
+	for i := 0; i < size; i++ {
+		res := <-resCh
+		resList = append(resList, res[0].(*R))
+		errList = append(errList, res[1].(error))
+	}
+	return &resList, &errList
 }

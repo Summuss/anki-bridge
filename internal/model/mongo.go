@@ -97,16 +97,22 @@ func (d *Dao[T]) FindMany(query interface{}) (*[]T, error) {
 }
 
 func (d *Dao[T]) saveResources(t T) error {
-	if t.GetResources() == nil {
+	resources := t.GetResources()
+	size := len(*resources)
+	if resources == nil {
 		return nil
 	}
 
-	if t.GetResources() == nil || len(*t.GetResources()) == 0 {
+	if resources == nil || size == 0 {
 		return nil
 	}
-	ris := common.SafeList[primitive.ObjectID]{}
+	riCh := make(chan primitive.ObjectID, size)
 	err := common.DoParallel(
-		t.GetResources(), func(r *Resource) error {
+		resources, func(r *Resource) error {
+			var objectID primitive.ObjectID
+			defer func() {
+				riCh <- objectID
+			}()
 			if len(r.Metadata.FileName) == 0 {
 				return fmt.Errorf("file name is empty")
 			}
@@ -119,7 +125,7 @@ func (d *Dao[T]) saveResources(t T) error {
 			metadata := options.GridFSUpload().SetMetadata(r.toBsonM())
 			db := d.Client.Database(d.DBName)
 			bucket, err := gridfs.NewBucket(db)
-			objectID, err := bucket.UploadFromStream(
+			objectID, err = bucket.UploadFromStream(
 				r.Metadata.FileName, bytes.NewReader(r.data),
 				metadata,
 			)
@@ -129,11 +135,16 @@ func (d *Dao[T]) saveResources(t T) error {
 				)
 			}
 			r.Id = objectID
-			ris.Add(objectID)
 			return nil
 		},
 	)
-	ids := ris.ToSlice()
+	ids := make([]primitive.ObjectID, 0, size)
+	for i := 0; i < size; i++ {
+		id := <-riCh
+		if !id.IsZero() {
+			ids = append(ids, id)
+		}
+	}
 	t.SetResourceIDs(&ids)
 	return err
 }
