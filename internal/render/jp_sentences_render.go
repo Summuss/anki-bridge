@@ -50,7 +50,7 @@ func (j jpSentencesRender) Process(m model.IModel) (*anki.Card, error) {
 }
 
 func replaceCloze(ori string) string {
-	r := regexp.MustCompile(`\{\{cloze (.*?)}}`)
+	r := regexp.MustCompile(`\s?\{\{cloze (.*?)}}\s?`)
 	return r.ReplaceAllStringFunc(
 		ori, func(s string) string {
 			submatches := r.FindStringSubmatch(s)

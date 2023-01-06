@@ -32,7 +32,7 @@ func (w JPWordsParser) Match(note string, noteType common.NoteType) bool {
 
 func (w JPWordsParser) Check(note string, _ common.NoteType) error {
 	notePreproc := common.PreprocessNote(note)
-	r, _ := regexp.Compile(`(?m)\A\s*^-\s*(?P<word>\S+.*)$\n^\t-\s*(?P<meaning>\S+.*)$\n^\t-\s*(?P<hiragana>\S+)\s+(?P<pitch>\d)\s+(?P<classes>.+)$\s*\z`)
+	r, _ := regexp.Compile(`(?m)\A\s*^-\s*(?P<word>\S+.*)$\n^\t-\s*(?P<meaning>\S+.*)$\n^\t-\s*(?P<hiragana>\S+)\s+(?P<pitch>\S)\s+(?P<classes>.+)$\s*\z`)
 	if !r.MatchString(notePreproc) {
 		return fmt.Errorf("synatx error in word\n%s", note)
 	}
@@ -53,7 +53,8 @@ func (w JPWordsParser) Check(note string, _ common.NoteType) error {
 
 func (w JPWordsParser) Parse(note string, noteType common.NoteType) (model.IModel, error) {
 	notePreproc := common.PreprocessNote(note)
-	r, _ := regexp.Compile(`(?m)\A\s*^-\s*(?P<word>\S+.*)$\n^\t-\s*(?P<meaning>\S+.*)$\n^\t-\s*(?P<hiragana>\S+)\s+(?P<pitch>\d)\s+(?P<classes>.+)$\s*\z`)
+	//FIXME:
+	r, _ := regexp.Compile(`(?m)\A\s*^-\s*(?P<word>\S+.*)$\n^\t-\s*(?P<meaning>\S+.*)$\n^\t-\s*(?P<hiragana>\S+)\s+(?P<pitch>\S)\s+(?P<classes>.+)$\s*\z`)
 	submatches := r.FindStringSubmatch(notePreproc)
 	classesStr := submatches[r.SubexpIndex("classes")]
 	classes := common.SplitWithTrimAndOmitEmpty(classesStr, " ")

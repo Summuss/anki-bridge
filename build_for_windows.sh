@@ -1,1 +1,1 @@
-GOOS=windows GOARCH=amd64 go build -o anki-bridge.exe
+GOOS=windows GOARCH=amd64 go build -o E:\\Data\\Desktop\\anki-bridge.exe

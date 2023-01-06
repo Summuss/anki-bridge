@@ -5,7 +5,6 @@ import (
 	b64 "encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"github.com/summuss/anki-bridge/internal/config"
 	"github.com/summuss/anki-bridge/internal/model"
@@ -97,17 +96,26 @@ func GetAllDecks() ([]string, error) {
 	return deskNames, nil
 }
 
+var ankiRequestCtrlCh = make(chan interface{}, 1)
+
 func requestAnki(action string, params map[string]interface{}) (map[string]interface{}, error) {
 	req := map[string]interface{}{"action": action, "params": params, "version": 6}
 	jsonStr, err := json.Marshal(req)
 	if err != nil {
 		return nil, fmt.Errorf("requestAnki: %s", err.Error())
 	}
+	ankiRequestCtrlCh <- struct{}{}
 	resp, err := http.Post(
 		config.Conf.AnkiAPIURL, "application/json", bytes.NewBuffer(jsonStr),
 	)
+	<-ankiRequestCtrlCh
 	if err != nil {
-		return nil, fmt.Errorf("requestAnki: %s,\n%s", err.Error(), string(jsonStr))
+		return nil, fmt.Errorf("requestAnki: %s", err.Error())
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("requestAnki: %s", resp.Status)
 	}
 	var res map[string]interface{}
 	err = json.NewDecoder(resp.Body).Decode(&res)
@@ -118,7 +126,7 @@ func requestAnki(action string, params map[string]interface{}) (map[string]inter
 	if errInfo != nil {
 		errStr := errInfo.(string)
 		if len(errStr) > 0 {
-			return nil, errors.New(errStr)
+			return nil, fmt.Errorf("requestAnki: %s,\n%s", errStr, string(jsonStr))
 		}
 	}
 	return res, nil
