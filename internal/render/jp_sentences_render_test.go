@@ -114,3 +114,51 @@ aaaa</li>
 		)
 	}
 }
+
+func Test_renderFront(t *testing.T) {
+	type args struct {
+		m *model.JPSentence
+	}
+	word1 := model.JPWord{
+		Hiragana:    "あまつさえ",
+		Mean:        "而且并且",
+		Pitch:       "1",
+		Spell:       "衰える",
+		WordClasses: []int{3, 12},
+	}
+
+	words := []*model.JPWord{&word1}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "1",
+			args: args{
+				m: &model.JPSentence{
+					Sentence: "君の一生の思い出、 {{cloze しかと}} {{cloze 見届け}} たぞ。",
+					JPWords:  &words,
+				},
+			},
+			want: `
+<div class="jp_sentence">
+    <div class="sentence">君の一生の思い出、<span class="cloze">しかと</span><span class="cloze">見届け</span>たぞ。 <br>
+        <ol>
+			<li>而且并且</li>
+        </ol>
+    </div>
+</div>
+`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(
+			tt.name, func(t *testing.T) {
+				if got := renderFront(tt.args.m); got != tt.want {
+					t.Errorf("renderFront() = %v, want %v", got, tt.want)
+				}
+			},
+		)
+	}
+}

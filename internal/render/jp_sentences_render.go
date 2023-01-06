@@ -43,10 +43,30 @@ func (j jpSentencesRender) Process(m model.IModel) (*anki.Card, error) {
 		addiHTML = fmt.Sprintf(`<div class="addition">%s</div>`, addiHTML)
 	}
 	return &anki.Card{
-		Front: replaceCloze(jpSentence.Sentence),
+		Front: renderFront(jpSentence),
 		Back:  strings.Join(words, "<hr><br>") + addiHTML,
 		Desk:  config.Conf.NoteType2Desk[common.NoteType_JPSentences],
 	}, nil
+}
+
+func renderFront(m *model.JPSentence) string {
+	templStr := `
+<div class="jp_sentence">
+    <div class="sentence">{{.Sentence}} <br>
+        <ol>
+			{{.WordMeanings}}
+        </ol>
+    </div>
+</div>
+`
+	wordMeanings := lo.Map(
+		*m.JPWords, func(item *model.JPWord, _ int) string {
+			return fmt.Sprintf("<li>%s</li>", item.Mean)
+		},
+	)
+
+	t1 := strings.ReplaceAll(templStr, "{{.Sentence}}", replaceCloze(m.Sentence))
+	return strings.ReplaceAll(t1, "{{.WordMeanings}}", strings.Join(wordMeanings, "\n"))
 }
 
 func replaceCloze(ori string) string {
