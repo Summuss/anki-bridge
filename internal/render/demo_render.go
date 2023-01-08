@@ -13,10 +13,10 @@ func init() {
 type demosRender struct {
 }
 
-func (j demosRender) Process(model model.IModel) (*anki.Card, error) {
+func (j demosRender) Process(m model.IModel) (*anki.Card, error) {
 	panic("implement me")
 }
 
-func (j demosRender) Match(model model.IModel) bool {
+func (j demosRender) Match(m model.IModel) bool {
 	panic("implement me")
 }
