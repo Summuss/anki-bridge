@@ -227,11 +227,13 @@ func (d *Dao[T]) Save(model T, models ...T) error {
 				m.(T).SetUpdateTime(now)
 			}
 			// transaction disabled
-			for _, m := range insertMs {
-				t := m.(T)
-				err := d.CheckDuplication(t)
-				if err != nil {
-					return nil, err
+			if !config.Conf.DisableDuplicationCheck {
+				for _, m := range insertMs {
+					t := m.(T)
+					err := d.CheckDuplication(t)
+					if err != nil {
+						return nil, err
+					}
 				}
 			}
 			res, err := d.getCollection().InsertMany(context.TODO(), insertMs)

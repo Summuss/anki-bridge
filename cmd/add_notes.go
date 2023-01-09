@@ -38,13 +38,29 @@ var addNotesCMD = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		for _, nt := range common.NoteTypeList {
-			targetDesk := config.Conf.NoteType2Desk[nt]
+		models, err := anki.GetAllAnkiModels()
+		if err != nil {
+			return err
+		}
+		for name := range config.Conf.NoteInfo {
+			if !slices.Contains(common.NoteTypeNameList, name) {
+				return fmt.Errorf("note type name of %s not exist", name)
+			}
+			noteInfo := config.Conf.GetNoteInfoByName(name)
+			targetDesk := noteInfo.Desk
 			if targetDesk == "" {
-				return fmt.Errorf("[[%s]]'s target desk not specified", nt)
+				return fmt.Errorf("[[%s]]'s target desk not specified", name)
 			}
 			if !slices.Contains(decks, targetDesk) {
-				return fmt.Errorf("[[%s]]'s target desk %s not exist", nt, targetDesk)
+				return fmt.Errorf("[[%s]]'s target desk %s not exist", name, targetDesk)
+			}
+
+			targetAnkiModel := noteInfo.AnkiNoteModel
+			if targetAnkiModel == "" {
+				return fmt.Errorf("[[%s]]'s target anki model not specified", name)
+			}
+			if !slices.Contains(models, targetAnkiModel) {
+				return fmt.Errorf("[[%s]]'s target anki model %s not exist", name, targetAnkiModel)
 			}
 		}
 		if PreBackUpFlg {

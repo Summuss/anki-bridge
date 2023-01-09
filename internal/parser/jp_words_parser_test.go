@@ -1,6 +1,8 @@
 package parser
 
 import (
+	"github.com/summuss/anki-bridge/internal/common"
+	"github.com/summuss/anki-bridge/internal/config"
 	"github.com/summuss/anki-bridge/internal/model"
 	"strings"
 	"testing"
@@ -70,7 +72,9 @@ func TestJPWordsParser_Check(t *testing.T) {
 		t.Run(
 			tt.name, func(t *testing.T) {
 				w := JPWordsParser{}
-				if err := w.Check(tt.args.note, ""); (err != nil) != tt.wantErr {
+				if err := w.Check(
+					tt.args.note, *config.Conf.GetNoteInfoByName(common.NoteType_JPWords_Name),
+				); (err != nil) != tt.wantErr {
 					t.Errorf("Check() error = %v, wantErr %v", err, tt.wantErr)
 				}
 			},
@@ -113,7 +117,9 @@ func TestJPWordsParser_Parse(t *testing.T) {
 		t.Run(
 			tt.name, func(t *testing.T) {
 				w := JPWordsParser{}
-				got, err := w.Parse(tt.args.note, "")
+				got, err := w.Parse(
+					tt.args.note, *config.Conf.GetNoteInfoByName(common.NoteType_JPWords_Name),
+				)
 				if (err != nil) != tt.wantErr {
 					t.Errorf("Parse() error = %v, wantErr %v", err, tt.wantErr)
 					return

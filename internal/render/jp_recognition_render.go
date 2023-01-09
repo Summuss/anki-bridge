@@ -59,10 +59,10 @@ func (j jpRecognitionRender) Process(m model.IModel) (*anki.Card, error) {
 	return &anki.Card{
 		Front: jpWord.Spell,
 		Back:  string(bts),
-		Desk:  config.Conf.NoteType2Desk[common.NoteType_JPRecognition],
+		Desk:  config.Conf.GetNoteInfoByName(common.NoteType_JPRecognition_Name).Desk,
 	}, nil
 }
 
 func (j jpRecognitionRender) Match(m model.IModel) bool {
-	return m.GetNoteType() == "认识"
+	return m.GetNoteTypeName() == common.NoteType_JPRecognition_Name
 }

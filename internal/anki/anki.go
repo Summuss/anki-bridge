@@ -96,6 +96,20 @@ func GetAllDecks() ([]string, error) {
 	return deskNames, nil
 }
 
+func GetAllAnkiModels() ([]string, error) {
+	res, err := requestAnki("modelNames", map[string]interface{}{})
+	if err != nil {
+		return nil, fmt.Errorf("fetch modelNames failed, %s", err.Error())
+	}
+	datas := res["result"].([]interface{})
+	modelNames := lo.Map(
+		datas, func(item interface{}, _ int) string {
+			return item.(string)
+		},
+	)
+	return modelNames, nil
+}
+
 var ankiRequestCtrlCh = make(chan interface{}, 1)
 
 func requestAnki(action string, params map[string]interface{}) (map[string]interface{}, error) {

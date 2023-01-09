@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"github.com/summuss/anki-bridge/internal/common"
 	"gopkg.in/yaml.v3"
 	"log"
@@ -33,12 +34,63 @@ func init() {
 }
 
 type Config struct {
-	MongoConnectURL  string                     `yaml:"mongo-connect-url"`
-	DBName           string                     `yaml:"db-name"`
-	AnkiAPIURL       string                     `yaml:"anki-api-url"`
-	DefaultInputFile string                     `yaml:"default-input-file"`
-	TTScmd           []string                   `yaml:"tts-cmd"`
-	BackupCmd        [][]string                 `yaml:"backup-cmd"`
-	RealMode         bool                       `yaml:"real-mode"`
-	NoteType2Desk    map[common.NoteType]string `yaml:"note-type-2-desk"`
+	MongoConnectURL         string                                    `yaml:"mongo-connect-url"`
+	DBName                  string                                    `yaml:"db-name"`
+	AnkiAPIURL              string                                    `yaml:"anki-api-url"`
+	DefaultInputFile        string                                    `yaml:"default-input-file"`
+	TTScmd                  []string                                  `yaml:"tts-cmd"`
+	BackupCmd               [][]string                                `yaml:"backup-cmd"`
+	RealMode                bool                                      `yaml:"real-mode"`
+	DisableDuplicationCheck bool                                      `yaml:"disable-duplication-check"`
+	NoteInfo                map[common.NoteTypeName]map[string]string `yaml:"note-info"`
+
+	noteInfoCacheByName  map[common.NoteTypeName]*common.NoteInfo
+	noteInfoCacheByTitle map[string]*common.NoteInfo
+}
+
+func (c *Config) GetNoteInfoByTitle(noteTitle string) (*common.NoteInfo, error) {
+	if c.noteInfoCacheByTitle == nil {
+		c.noteInfoCacheByTitle = make(map[string]*common.NoteInfo)
+	}
+	if _, ok := c.noteInfoCacheByTitle[noteTitle]; ok {
+		return c.noteInfoCacheByTitle[noteTitle], nil
+	}
+
+	for k, v := range c.NoteInfo {
+		if v["title"] == noteTitle {
+			info := &common.NoteInfo{
+				Name:          k,
+				Title:         v["title"],
+				Desk:          v["desk"],
+				AnkiNoteModel: v["anki-note-model"],
+			}
+			c.noteInfoCacheByTitle[noteTitle] = info
+			return info, nil
+		}
+
+	}
+	return nil, fmt.Errorf("can't find NoteInfo from conf by noteTitle %s", noteTitle)
+}
+func (c *Config) GetNoteInfoByName(name common.NoteTypeName) *common.NoteInfo {
+	if c.noteInfoCacheByName == nil {
+		c.noteInfoCacheByName = make(map[common.NoteTypeName]*common.NoteInfo)
+	}
+	if _, ok := c.noteInfoCacheByName[name]; ok {
+		return c.noteInfoCacheByName[name]
+	}
+
+	for k, v := range c.NoteInfo {
+		if k == name {
+			info := &common.NoteInfo{
+				Name:          common.NoteTypeName(k),
+				Title:         v["title"],
+				Desk:          v["desk"],
+				AnkiNoteModel: v["anki-note-model"],
+			}
+			c.noteInfoCacheByName[name] = info
+			return info
+		}
+
+	}
+	panic(fmt.Sprintf("can't find NoteInfo from conf by noteName %s", name))
 }

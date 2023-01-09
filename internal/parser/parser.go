@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/samber/lo"
 	"github.com/summuss/anki-bridge/internal/common"
+	"github.com/summuss/anki-bridge/internal/config"
 	"github.com/summuss/anki-bridge/internal/model"
 	"github.com/summuss/anki-bridge/internal/splitter"
 	"golang.org/x/exp/slices"
@@ -14,9 +15,9 @@ import (
 )
 
 type iParser interface {
-	Match(note string, noteType common.NoteType) bool
-	Check(note string, noteType common.NoteType) error
-	Parse(note string, noteType common.NoteType) (model.IModel, error)
+	Match(note string, noteType common.NoteInfo) bool
+	Check(note string, noteType common.NoteInfo) error
+	Parse(note string, noteType common.NoteInfo) (model.IModel, error)
 	Priority() int
 }
 
@@ -30,7 +31,7 @@ var (
 	parsers = &[]iParser{}
 )
 
-func splitByNoteType(content string) (map[common.NoteType]string, error) {
+func splitByNoteType(content string) (map[*common.NoteInfo]string, error) {
 	content = content + "\n"
 	r2, _ := regexp.Compile(`(?m)^\S+.*$\n`)
 	splits := r2.Split(content, -1)
@@ -38,17 +39,26 @@ func splitByNoteType(content string) (map[common.NoteType]string, error) {
 		return nil, fmt.Errorf("syntax error near %s", splits[0])
 	}
 	matches := r2.FindAllString(content, -1)
+	noteTypeTitles := lo.Map(
+		matches, func(item string, _ int) string {
+			noteTypeTitle := strings.TrimSpace(item)
+			noteTypeTitle = computeRealNoteName(noteTypeTitle)
+			return noteTypeTitle
+		},
+	)
 
-	noteTypeName2SubTxt := make(map[common.NoteType]string)
-	for i, match := range matches {
-		noteTypeName := strings.TrimSpace(match)
-		noteTypeName = computeRealNoteName(noteTypeName)
+	noteTypeName2SubTxt := make(map[*common.NoteInfo]string)
+	for i, noteTypeTitle := range noteTypeTitles {
 		note := strings.TrimSpace(common.UnIndent(splits[i+1]))
 
-		if len(noteTypeName) == 0 || len(note) == 0 {
+		if len(noteTypeTitle) == 0 || len(note) == 0 {
 			continue
 		}
-		noteTypeName2SubTxt[common.NoteType(noteTypeName)] += "\n" + note
+		noteInfo, err := config.Conf.GetNoteInfoByTitle(noteTypeTitle)
+		if err != nil {
+			return nil, err
+		}
+		noteTypeName2SubTxt[noteInfo] += "\n" + note
 	}
 	return noteTypeName2SubTxt, nil
 }
@@ -58,20 +68,20 @@ func CheckInput(txt string) error {
 	if !r.MatchString(txt) {
 		return errors.New("input structure error")
 	}
-	noteTypeName2SubTxt, err := splitByNoteType(txt)
+	noteTypeInfo2SubTxt, err := splitByNoteType(txt)
 	if err != nil {
 		return err
 	}
-	size := len(noteTypeName2SubTxt)
+	size := len(noteTypeInfo2SubTxt)
 	if size == 0 {
 		return nil
 	}
 	errCh := make(chan error, size)
-	for noteName, subTxt := range noteTypeName2SubTxt {
-		noteName := noteName
+	for noteInfo, subTxt := range noteTypeInfo2SubTxt {
+		noteInfo := noteInfo
 		subTxt := subTxt
 		go func() {
-			notes, err := splitter.Split(subTxt, noteName)
+			notes, err := splitter.Split(subTxt, *noteInfo)
 			if err != nil {
 				errCh <- err
 				return
@@ -79,11 +89,11 @@ func CheckInput(txt string) error {
 
 			err = common.DoParallel(
 				notes, func(note *string) error {
-					parser, err := findParser(noteName, *note)
+					parser, err := findParser(*noteInfo, *note)
 					if err != nil {
 						return err
 					}
-					err = parser.Check(*note, noteName)
+					err = parser.Check(*note, *noteInfo)
 					if err != nil {
 						return err
 					}
@@ -102,8 +112,8 @@ func CheckInput(txt string) error {
 
 func Parse(text string) (*[]model.IModel, error) {
 	var res []model.IModel
-	noteTypeName2SubTxt, _ := splitByNoteType(text)
-	size := len(noteTypeName2SubTxt)
+	noteTypeInfo2SubTxt, _ := splitByNoteType(text)
+	size := len(noteTypeInfo2SubTxt)
 	if size == 0 {
 		return &res, nil
 	}
@@ -112,22 +122,22 @@ func Parse(text string) (*[]model.IModel, error) {
 	errCh := make(chan error, size)
 	countCh := make(chan int, size)
 
-	for noteName, subTxt := range noteTypeName2SubTxt {
-		noteName := noteName
+	for noteInfo, subTxt := range noteTypeInfo2SubTxt {
+		noteInfo := noteInfo
 		subTxt := subTxt
 		go func() {
 			defer func() {
 				countCh <- 1
 			}()
-			notes, _ := splitter.Split(subTxt, noteName)
+			notes, _ := splitter.Split(subTxt, *noteInfo)
 			err := common.DoParallel(
 				notes, func(note *string) error {
-					parser, _ := findParser(noteName, *note)
-					m, err := parser.Parse(*note, noteName)
+					parser, _ := findParser(*noteInfo, *note)
+					m, err := parser.Parse(*note, *noteInfo)
 					if err != nil {
 						return err
 					}
-					m.SetNoteType(noteName)
+					m.SetNoteTypeName(noteInfo.Name)
 					modelCh <- m
 					return nil
 				},
@@ -165,7 +175,7 @@ func Parse(text string) (*[]model.IModel, error) {
 	return &res, nil
 }
 
-func findParser(noteName common.NoteType, note string) (iParser, error) {
+func findParser(noteName common.NoteInfo, note string) (iParser, error) {
 	parserFlt := lo.Filter(
 		*parsers, func(item iParser, index int) bool {
 			return item.Match(note, noteName)

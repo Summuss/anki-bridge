@@ -67,3 +67,15 @@ func TestGetAllDecks(t *testing.T) {
 	}
 
 }
+
+func TestGetAllAnkiModels(t *testing.T) {
+	models, err := GetAllAnkiModels()
+	if err != nil {
+		t.Error(err)
+		return
+
+	}
+	if len(models) == 0 {
+		t.Error("size=0")
+	}
+}

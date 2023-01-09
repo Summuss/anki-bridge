@@ -62,7 +62,7 @@ func (j jpWordsRender) Process(m model.IModel) (*anki.Card, error) {
 	return &anki.Card{
 		Front: jpWord.Mean,
 		Back:  string(bts),
-		Desk:  config.Conf.NoteType2Desk[common.NoteType_JPWords],
+		Desk:  config.Conf.GetNoteInfoByName(common.NoteType_JPWords_Name).Desk,
 	}, nil
 }
 
@@ -125,5 +125,5 @@ func renderSounds(rs *[]model.Resource) string {
 }
 
 func (j jpWordsRender) Match(m model.IModel) bool {
-	return "Jp Words" == m.GetNoteType()
+	return common.NoteType_JPWords_Name == m.GetNoteTypeName()
 }

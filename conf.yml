@@ -1,5 +1,6 @@
 ---
 real-mode: false
+disable-duplication-check: off
 mongo-connect-url: "mongodb://mongoadmin:secret@daemon:27017/test?authSource=admin"
 db-name: test
 anki-api-url: "http://localhost:8766"
@@ -10,7 +11,21 @@ backup-cmd:
 tts-cmd:
   - E:\SDK\nodejs\node.exe
   - E:\Code\Go\anki-bridge\oddcast_api.js
-note-type-2-desk:
-  Jp Words: Japanese::Words
-  Jp Sentences: Japanese::Sentences
-  认识: Japanese::Recognition
+
+note-info:
+  JPWords:
+    title: Jp Words
+    desk: Japanese::Words
+    anki-note-model: BasicTwoSide
+  JPSentences:
+    title: Jp Sentences
+    desk: Japanese::Sentences
+    anki-note-model: BasicTwoSide
+  JPRecognition:
+    title: 认识
+    desk: Japanese::Recognition
+    anki-note-model: BasicTwoSide
+#  Kanji:
+#    title: Kanji
+#    desk: Japanese::Words
+#    anki-note-model: BasicTwoSide

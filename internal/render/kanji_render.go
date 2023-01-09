@@ -23,7 +23,7 @@ func (j kanjiRender) Process(m model.IModel) (*anki.Card, error) {
 	return &anki.Card{
 		Front: kanji.Kanji,
 		Back:  renderKanjiBack(kanji),
-		Desk:  config.Conf.NoteType2Desk[common.NoteType_Kanji],
+		Desk:  config.Conf.GetNoteInfoByName(common.NoteType_Kanji_Name).Desk,
 	}, nil
 }
 

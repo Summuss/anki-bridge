@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/samber/lo"
 	"github.com/summuss/anki-bridge/internal/common"
+	"github.com/summuss/anki-bridge/internal/config"
 	"github.com/summuss/anki-bridge/internal/model"
 	"github.com/summuss/anki-bridge/internal/splitter"
 	"regexp"
@@ -42,11 +43,11 @@ func (p JPSentencesParser2) Priority() int {
 	return -1
 }
 
-func (J JPSentencesParser2) Match(note string, noteType common.NoteType) bool {
-	return common.NoteType_JPSentences == noteType && jpSentencesParser2Pattern.MatchString(note)
+func (J JPSentencesParser2) Match(note string, noteType common.NoteInfo) bool {
+	return common.NoteType_JPSentences_Name == noteType.Name && jpSentencesParser2Pattern.MatchString(note)
 }
 
-func (J JPSentencesParser2) Check(note string, _ common.NoteType) error {
+func (J JPSentencesParser2) Check(note string, _ common.NoteInfo) error {
 	notePreproc := common.PreprocessNote(note)
 	if !jpSentencesParser2Pattern.MatchString(notePreproc) {
 		return fmt.Errorf("note synatx error:\n%s", note)
@@ -57,14 +58,14 @@ func (J JPSentencesParser2) Check(note string, _ common.NoteType) error {
 	wordsRaw = strings.ReplaceAll(wordsRaw, "#[[Jp Words]]", "")
 	additionRaw := submatches[jpSentencesParser2Pattern.SubexpIndex("addition")]
 	additionRaw = common.UnIndent(additionRaw)
-
-	word_notes, err := splitter.Split(wordsRaw, common.NoteType_JPWords)
+	wordNoteInfo := *config.Conf.GetNoteInfoByName(common.NoteType_JPWords_Name)
+	word_notes, err := splitter.Split(wordsRaw, wordNoteInfo)
 	if err != nil {
 		return fmt.Errorf("%s\n in note:\n%s", err.Error(), note)
 	}
 	errorList := lo.Map(
 		*word_notes, func(item string, _ int) error {
-			err = jpWordsParser.Check(item, "")
+			err = jpWordsParser.Check(item, wordNoteInfo)
 			if err != nil {
 				return fmt.Errorf("%s\nin note:\n%s", err.Error(), note)
 			}
@@ -74,18 +75,19 @@ func (J JPSentencesParser2) Check(note string, _ common.NoteType) error {
 	return common.MergeErrors(errorList)
 }
 
-func (J JPSentencesParser2) Parse(note string, noteType common.NoteType) (model.IModel, error) {
+func (J JPSentencesParser2) Parse(note string, noteType common.NoteInfo) (model.IModel, error) {
 	notePreproc := common.PreprocessNote(note)
 	submatches := jpSentencesParser2Pattern.FindStringSubmatch(notePreproc)
 	sentence := submatches[jpSentencesParser2Pattern.SubexpIndex("sentence")]
 	wordsRaw := submatches[jpSentencesParser2Pattern.SubexpIndex("words")]
 	wordsRaw = common.UnIndent(wordsRaw)
 	wordsRaw = strings.ReplaceAll(wordsRaw, "#[[Jp Words]]", "")
-	word_notes, _ := splitter.Split(wordsRaw, common.NoteType_JPWords)
+	wordNoteInfo := *config.Conf.GetNoteInfoByName(common.NoteType_JPWords_Name)
+	word_notes, _ := splitter.Split(wordsRaw, wordNoteInfo)
 	var err error
 	words := lo.Map(
 		*word_notes, func(item string, _ int) *model.JPWord {
-			word, e := jpWordsParser.Parse(item, "")
+			word, e := jpWordsParser.Parse(item, wordNoteInfo)
 			if e != nil {
 				err = e
 				return nil

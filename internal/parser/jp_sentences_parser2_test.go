@@ -2,6 +2,7 @@ package parser
 
 import (
 	"github.com/summuss/anki-bridge/internal/common"
+	"github.com/summuss/anki-bridge/internal/config"
 	"github.com/summuss/anki-bridge/internal/model"
 	"reflect"
 	"testing"
@@ -10,7 +11,7 @@ import (
 func TestJPSentencesParser2_Check(t *testing.T) {
 	type args struct {
 		note string
-		in1  common.NoteType
+		in1  common.NoteInfo
 	}
 	tests := []struct {
 		name    string
@@ -20,7 +21,7 @@ func TestJPSentencesParser2_Check(t *testing.T) {
 		{
 			name: "1",
 			args: args{
-				in1: common.NoteType_JPSentences, note: `
+				in1: *config.Conf.GetNoteInfoByName(common.NoteType_JPSentences_Name), note: `
 - 君の一生の思い出、 {{cloze しかと}} {{cloze  見届け}} たぞ。
 	- 確と #[[Jp Words]]
 		- 〔たしかに〕确实,明确,准确.
@@ -57,7 +58,7 @@ func TestJPSentencesParser2_Check(t *testing.T) {
 func TestJPSentencesParser2_Parse(t *testing.T) {
 	type args struct {
 		note     string
-		noteType common.NoteType
+		noteType common.NoteInfo
 	}
 	word1 := model.JPWord{
 		BaseModel:   model.BaseModel{},
@@ -77,7 +78,7 @@ func TestJPSentencesParser2_Parse(t *testing.T) {
 		{
 			name: "1",
 			args: args{
-				noteType: common.NoteType_JPSentences, note: `
+				noteType: *config.Conf.GetNoteInfoByName(common.NoteType_JPSentences_Name), note: `
 - 君の一生の思い出、 {{cloze しかと}} {{cloze  見届け}} たぞ。
 	- 出来事#[[Jp Words]]
 		- (偶发)的事件，变故。（持ち上がった事件・事柄。）
