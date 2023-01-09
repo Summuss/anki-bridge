@@ -20,9 +20,10 @@ type Card struct {
 	ModelID    string
 
 	// need to manually set
-	Front string
-	Back  string
-	Desk  string
+	Front         string
+	Back          string
+	Desk          string
+	AnkiNoteModel string
 }
 
 // AddCard write id back to card after successful adding
@@ -55,7 +56,7 @@ func AddCard(card *Card) error {
 	var options = map[string]interface{}{"allowDuplicate": true}
 	var note = map[string]interface{}{
 		"deckName":  card.Desk,
-		"modelName": "BasicTwoSide",
+		"modelName": card.AnkiNoteModel,
 		"fields":    fields,
 		"options":   options,
 	}

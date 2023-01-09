@@ -59,10 +59,12 @@ func (j jpWordsRender) Process(m model.IModel) (*anki.Card, error) {
 		return nil, err
 	}
 
+	noteInfo := config.Conf.GetNoteInfoByName(common.NoteType_JPWords_Name)
 	return &anki.Card{
-		Front: jpWord.Mean,
-		Back:  string(bts),
-		Desk:  config.Conf.GetNoteInfoByName(common.NoteType_JPWords_Name).Desk,
+		Front:         jpWord.Mean,
+		Back:          string(bts),
+		Desk:          noteInfo.Desk,
+		AnkiNoteModel: noteInfo.AnkiNoteModel,
 	}, nil
 }
 

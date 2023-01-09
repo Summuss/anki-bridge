@@ -20,10 +20,12 @@ type kanjiRender struct {
 
 func (j kanjiRender) Process(m model.IModel) (*anki.Card, error) {
 	kanji := m.(*model.Kanji)
+	noteInfo := config.Conf.GetNoteInfoByName(common.NoteType_Kanji_Name)
 	return &anki.Card{
-		Front: kanji.Kanji,
-		Back:  renderKanjiBack(kanji),
-		Desk:  config.Conf.GetNoteInfoByName(common.NoteType_Kanji_Name).Desk,
+		Front:         kanji.Kanji,
+		Back:          renderKanjiBack(kanji),
+		Desk:          noteInfo.Desk,
+		AnkiNoteModel: noteInfo.AnkiNoteModel,
 	}, nil
 }
 

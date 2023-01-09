@@ -42,10 +42,12 @@ func (j jpSentencesRender) Process(m model.IModel) (*anki.Card, error) {
 		addiHTML = string(bs)
 		addiHTML = fmt.Sprintf(`<div class="addition">%s</div>`, addiHTML)
 	}
+	noteInfo := config.Conf.GetNoteInfoByName(common.NoteType_JPSentences_Name)
 	return &anki.Card{
-		Front: renderFront(jpSentence),
-		Back:  strings.Join(words, "<hr><br>") + addiHTML,
-		Desk:  config.Conf.GetNoteInfoByName(common.NoteType_JPSentences_Name).Desk,
+		Front:         renderFront(jpSentence),
+		Back:          strings.Join(words, "<hr><br>") + addiHTML,
+		Desk:          noteInfo.Desk,
+		AnkiNoteModel: noteInfo.AnkiNoteModel,
 	}, nil
 }
 
