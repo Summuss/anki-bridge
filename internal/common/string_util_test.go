@@ -69,3 +69,38 @@ W2 xxx
 		)
 	}
 }
+
+func TestRemoveExtraInfo(t *testing.T) {
+	type args struct {
+		text string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "1",
+			args: args{
+				text: `
+- それはすみません、 {{cloze 立ち入っ}} たことを聞きました
+	  collapsed:: true
+		- 立ち入る
+`,
+			},
+			want: `
+- それはすみません、 {{cloze 立ち入っ}} たことを聞きました
+		- 立ち入る
+`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(
+			tt.name, func(t *testing.T) {
+				if got := RemoveExtraInfo(tt.args.text); got != tt.want {
+					t.Errorf("RemoveExtraInfo() = %v, want %v", got, tt.want)
+				}
+			},
+		)
+	}
+}

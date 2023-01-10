@@ -27,6 +27,10 @@ func SplitByNoIndentLine(txt string) (*[]string, error) {
 	return &res, nil
 }
 
+func RemoveExtraInfo(text string) string {
+	return regexp.MustCompile(`(?m)(^\s*collapsed:: true\s*$\n)`).ReplaceAllString(text, "")
+}
+
 func PreprocessNote(note string) string {
 	replaceMap := map[string]string{
 		"＃":  "#",
