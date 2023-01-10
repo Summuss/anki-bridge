@@ -15,7 +15,6 @@ import (
 	"log"
 	"os"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -101,20 +100,23 @@ func addNotes(text string) error {
 	if err != nil {
 		return fmt.Errorf("parse error:\n %s", err.Error())
 	}
-	var insertNumMu sync.Mutex
-	var skipNumMu sync.Mutex
-	var insertNum int
-	var skipNum int
+	size := len(*ms)
+	insertCh := make(chan interface{}, size)
+	skipCh := make(chan interface{}, size)
+	failCh := make(chan interface{}, size)
 	err = common.DoParallel(
-		ms, func(m *model.IModel) error {
+		ms, func(m *model.IModel) (e error) {
+			defer func() {
+				if e != nil {
+					failCh <- struct{}{}
+				}
+			}()
 			desc := (*m).Desc()
 			err = (*m).Save(model.MongoClient, config.Conf.DBName)
 			if err != nil {
 				if _, ok := err.(model.ExistError); ok {
 					log.Printf("warnning: %s already existed, skip", desc)
-					skipNumMu.Lock()
-					skipNum++
-					skipNumMu.Unlock()
+					skipCh <- struct{}{}
 					return nil
 				} else {
 					return fmt.Errorf("save %s to db failed,error:\n%s", desc, err.Error())
@@ -150,13 +152,24 @@ func addNotes(text string) error {
 					return nil
 				},
 			)
-			insertNumMu.Lock()
-			insertNum = insertNum + 1
-			insertNumMu.Unlock()
+			insertCh <- struct{}{}
 			return nil
 		},
 	)
-	log.Printf("insert/skip/total: %d/%d/%d\n", insertNum, skipNum, len(*ms))
+	var insertNum int
+	var skipNum int
+
+	for i := 0; i < size; i++ {
+		select {
+		case <-insertCh:
+			insertNum++
+		case <-skipCh:
+			skipNum++
+		case <-failCh:
+			//do nothing
+		}
+	}
+	log.Printf("insert/skip/total: %d/%d/%d\n", insertNum, skipNum, size)
 	return err
 
 }

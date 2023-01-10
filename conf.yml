@@ -22,7 +22,7 @@ note-info:
     desk: Japanese::Sentences
     anki-note-model: BasicTwoSide
   JPRecognition:
-    title: 认识
+    title: Jp Recognition
     desk: Japanese::Recognition
     anki-note-model: BasicTwoSide
 #  Kanji:
