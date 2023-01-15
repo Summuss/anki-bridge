@@ -26,13 +26,13 @@ func Test_renderKanjiBack(t *testing.T) {
 		<table class="char_read">
 			<tbody>
 <tr>
-	<td rowspan="5" class="char"><span>一</span></td>
-	<td class="read underline">イチ</td>
+	<td rowspan="2" class="char"><span>一</span></td>
+	<td class="read underline"><span class="pron">イチ</span></td>
 	<td class="rei underline">一度 一座 第一</td>
 </tr>
 
 <tr>
-	<td class="read underline">イツ</td>
+	<td class="read underline"><span class="pron">イツ</span></td>
 	<td class="rei underline">一般 同一 統一</td>
 </tr></tbody>
 		</table>
@@ -42,8 +42,8 @@ func Test_renderKanjiBack(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(
 			tt.name, func(t *testing.T) {
-				if got := renderKanjiBack(tt.args.kanji); got != tt.want {
-					t.Errorf("renderKanjiBack() = %v, want %v", got, tt.want)
+				if got := renderKanji(tt.args.kanji); got != tt.want {
+					t.Errorf("renderKanji() = %v, want %v", got, tt.want)
 				}
 			},
 		)

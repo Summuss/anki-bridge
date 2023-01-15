@@ -25,7 +25,7 @@ note-info:
     title: Jp Recognition
     desk: Japanese::Recognition
     anki-note-model: BasicTwoSide
-#  Kanji:
-#    title: Kanji
-#    desk: Japanese::Words
-#    anki-note-model: BasicTwoSide
+  Kanji:
+    title: Kanji
+    desk: Japanese::Kanji
+    anki-note-model: BasicTwoSideKanji

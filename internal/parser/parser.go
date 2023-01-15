@@ -175,14 +175,16 @@ func Parse(text string) (*[]model.IModel, error) {
 	return &res, nil
 }
 
-func findParser(noteName common.NoteInfo, note string) (iParser, error) {
+func findParser(noteInfo common.NoteInfo, note string) (iParser, error) {
 	parserFlt := lo.Filter(
 		*parsers, func(item iParser, index int) bool {
-			return item.Match(note, noteName)
+			return item.Match(note, noteInfo)
 		},
 	)
 	if len(parserFlt) < 1 {
-		return nil, fmt.Errorf("can't found parser for note type of %s", noteName)
+		return nil, fmt.Errorf(
+			"can't found parser for note type of %s and note:\n%s", noteInfo, note,
+		)
 	} else if len(parserFlt) > 1 {
 		slices.SortFunc(
 			parserFlt, func(a, b iParser) bool {
@@ -191,7 +193,7 @@ func findParser(noteName common.NoteInfo, note string) (iParser, error) {
 		)
 		if parserFlt[0].Priority() == parserFlt[1].Priority() {
 			return nil, fmt.Errorf(
-				"found multiple parser with same priority for note type of %s", noteName,
+				"found multiple parser with same priority for note type of %s", noteInfo,
 			)
 		}
 		return parserFlt[0], nil

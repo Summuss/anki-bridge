@@ -22,25 +22,26 @@ func (j kanjiRender) Process(m model.IModel) (*anki.Card, error) {
 	kanji := m.(*model.Kanji)
 	noteInfo := config.Conf.GetNoteInfoByName(common.NoteType_Kanji_Name)
 	return &anki.Card{
-		Front:         kanji.Kanji,
-		Back:          renderKanjiBack(kanji),
+		Front:         renderKanji(kanji),
+		Back:          "",
 		Desk:          noteInfo.Desk,
 		AnkiNoteModel: noteInfo.AnkiNoteModel,
 	}, nil
 }
 
-func renderKanjiBack(kanji *model.Kanji) string {
+func renderKanji(kanji *model.Kanji) string {
+	size := len(*kanji.Prons)
 	trs := lo.Map(
 		*kanji.Prons, func(item *model.KanjiPron, i int) string {
 			if i == 0 {
 				tr := fmt.Sprintf(
 					`
 <tr>
-	<td rowspan="5" class="char"><span>%s</span></td>
-	<td class="read underline">%s</td>
+	<td rowspan="%d" class="char"><span>%s</span></td>
+	<td class="read underline"><span class="pron">%s</span></td>
 	<td class="rei underline">%s</td>
 </tr>`,
-					kanji.Kanji, item.Pron, item.Example,
+					size, kanji.Kanji, item.Pron, item.Example,
 				)
 				return tr
 
@@ -48,7 +49,7 @@ func renderKanjiBack(kanji *model.Kanji) string {
 			tr := fmt.Sprintf(
 				`
 <tr>
-	<td class="read underline">%s</td>
+	<td class="read underline"><span class="pron">%s</span></td>
 	<td class="rei underline">%s</td>
 </tr>`,
 				item.Pron, item.Example,
