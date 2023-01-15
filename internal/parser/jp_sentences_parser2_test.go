@@ -22,7 +22,7 @@ func TestJPSentencesParser2_Check(t *testing.T) {
 			name: "1",
 			args: args{
 				in1: *config.Conf.GetNoteInfoByName(common.NoteType_JPSentences_Name), note: `
-- 君の一生の思い出、 {{cloze しかと}} {{cloze  見届け}} たぞ。
+- #2 君の一生の思い出、 {{cloze しかと}} {{cloze  見届け}} たぞ。
 	- 確と #[[Jp Words]]
 		- 〔たしかに〕确实,明确,准确.
 		- しかと　2　4
@@ -79,7 +79,7 @@ func TestJPSentencesParser2_Parse(t *testing.T) {
 			name: "1",
 			args: args{
 				noteType: *config.Conf.GetNoteInfoByName(common.NoteType_JPSentences_Name), note: `
-- 君の一生の思い出、 {{cloze しかと}} {{cloze  見届け}} たぞ。
+- #2 君の一生の思い出、 {{cloze しかと}} {{cloze  見届け}} たぞ。
 	- 出来事#[[Jp Words]]
 		- (偶发)的事件，变故。（持ち上がった事件・事柄。）
 		- できごと 2 A 3

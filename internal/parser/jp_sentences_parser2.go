@@ -33,7 +33,7 @@ var _ = `
 (?m)\A\s*^- (\S+.*$)(\n^\t- \S+\s*#\[\[Jp Words]]$\n^\t\t- .*$\n^\t\t- .*$)*(\n^\t- .*($\n^\t+ .*$)*(\n^\t{2,}.*$)*)*\s*\z
 
 `
-var jpSentencesParser2Pattern = regexp.MustCompile(`(?m)\A\s*^- (?P<sentence>\S+.*$)(?P<words>(\n^\t- \S+\s*#\[\[Jp Words]]$\n^\t\t- .*$\n^\t\t- .*$)*)(?P<addition>(\n^\t- .*($\n^\t+ .*$)*(\n^\t{2,}.*$)*)*)\s*\z`)
+var jpSentencesParser2Pattern = regexp.MustCompile(`(?m)\A\s*^- #2 (?P<sentence>\S+.*$)(?P<words>(\n^\t- \S+\s*#\[\[Jp Words]]$\n^\t\t- .*$\n^\t\t- .*$)*)(?P<addition>(\n^\t- .*($\n^\t+ .*$)*(\n^\t{2,}.*$)*)*)\s*\z`)
 
 type JPSentencesParser2 struct {
 	baseParser
