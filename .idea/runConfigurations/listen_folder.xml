@@ -1,0 +1,12 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="listen-folder" type="GoApplicationRunConfiguration" factoryName="Go Application">
+    <module name="anki-bridge" />
+    <working_directory value="$PROJECT_DIR$" />
+    <parameters value="listen_folder" />
+    <kind value="PACKAGE" />
+    <package value="github.com/summuss/anki-bridge" />
+    <directory value="$PROJECT_DIR$" />
+    <filePath value="$PROJECT_DIR$/main.go" />
+    <method v="2" />
+  </configuration>
+</component>
