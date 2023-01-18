@@ -5,6 +5,7 @@ go 1.19
 require (
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/gomarkdown/markdown v0.0.0-20221013030248-663e2500819c
+	github.com/hashicorp/go-multierror v1.1.1
 	github.com/samber/lo v1.37.0
 	github.com/spf13/cobra v1.6.1
 	go.mongodb.org/mongo-driver v1.11.1
@@ -15,6 +16,7 @@ require (
 
 require (
 	github.com/golang/snappy v0.0.1 // indirect
+	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.1 // indirect
 	github.com/klauspost/compress v1.13.6 // indirect
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe // indirect

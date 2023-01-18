@@ -2,9 +2,8 @@ package common
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
-	"github.com/samber/lo"
+	"github.com/hashicorp/go-multierror"
 	"io"
 	"net/http"
 	"os/exec"
@@ -12,20 +11,11 @@ import (
 )
 
 func MergeErrors(errList []error) error {
-	errList = lo.Filter(
-		errList, func(item error, _ int) bool {
-			return item != nil
-		},
-	)
-	if len(errList) > 0 {
-		msg := lo.Reduce(
-			errList, func(agg string, err error, i int) string {
-				return agg + "\n" + err.Error()
-			}, "",
-		)
-		return errors.New(msg)
+	var res *multierror.Error
+	for _, err := range errList {
+		res = multierror.Append(res, err)
 	}
-	return nil
+	return res.ErrorOrNil()
 }
 
 func Exec(prog string, arg ...string) (string, error) {

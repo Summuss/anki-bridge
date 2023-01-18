@@ -1,6 +1,8 @@
 package common
 
 import (
+	"errors"
+	"fmt"
 	"testing"
 )
 
@@ -34,4 +36,17 @@ func Test_curlGetData(t *testing.T) {
 			},
 		)
 	}
+}
+
+func TestMergeErrors(t *testing.T) {
+	e1 := errors.New("error 1\nerror 1 line2")
+	e2 := errors.New("error 2")
+	e3 := errors.New("error 3")
+	e := MergeErrors([]error{e1, nil, e2, e3})
+	fmt.Printf("%s", e)
+	e = MergeErrors([]error{nil, nil})
+	if e != nil {
+		t.Error("e is not nil")
+	}
+
 }
