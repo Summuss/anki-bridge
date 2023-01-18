@@ -81,6 +81,16 @@ func (w JPWordsParser) Parse(note string, noteType *common.NoteInfo) (model.IMod
 		return nil, fmt.Errorf("download tts from %s failed,error:\n%s", femaleURL, err.Error())
 	}
 
+	jpWord := &model.JPWord{
+		Hiragana: hiragana, Mean: meaning, Pitch: pitch, Spell: word, WordClasses: classes_int,
+	}
+
+	var noTTSFlg bool
+	common.FetchExtraByKey(noteType, common.NO_JPWORD_TTS, &noTTSFlg)
+	if noTTSFlg {
+		return jpWord, nil
+	}
+
 	resource1 := &model.Resource{
 		Metadata: model.ResourceMetadata{
 			FileName: word + "-male.mp3", ResourceType: model.Sound, ExtName: ".mp3",
@@ -95,9 +105,6 @@ func (w JPWordsParser) Parse(note string, noteType *common.NoteInfo) (model.IMod
 	}
 	resource2.SetData(*data2)
 
-	jpWord := &model.JPWord{
-		Hiragana: hiragana, Mean: meaning, Pitch: pitch, Spell: word, WordClasses: classes_int,
-	}
 	jpWord.SetResources(&[]model.Resource{*resource1, *resource2})
 	return jpWord, nil
 
