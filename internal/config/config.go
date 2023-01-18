@@ -11,11 +11,11 @@ import (
 var Conf *Config
 
 func init() {
-	path := os.Getenv("ANKI_BRIDGE_CONF")
-	if len(path) == 0 {
-		path = "conf.yml"
+	confPath := os.Getenv("ANKI_BRIDGE_CONF")
+	if len(confPath) == 0 {
+		confPath = "conf.yml"
 	}
-	yamlFile, err := os.ReadFile(path)
+	yamlFile, err := os.ReadFile(confPath)
 	if err != nil {
 		log.Fatalf("yamlFile.Get err   #%v ", err)
 	}
@@ -26,6 +26,15 @@ func init() {
 	}
 	if len(Conf.TTScmd) == 0 {
 		log.Fatalf("conf file error: tts-cmd is empty")
+	}
+	if Conf.ResourceFolder != "" {
+		stat, err := os.Stat(Conf.ResourceFolder)
+		if os.IsNotExist(err) {
+			log.Fatalf("resource-folder %s not found", Conf.ResourceFolder)
+		}
+		if !stat.IsDir() {
+			log.Fatalf("resource-folder %s is't a dictionay", Conf.ResourceFolder)
+		}
 	}
 	if !Conf.RealMode {
 		log.Println("warning: test mode on")
@@ -42,6 +51,7 @@ type Config struct {
 	BackupCmd               [][]string                                `yaml:"backup-cmd"`
 	RealMode                bool                                      `yaml:"real-mode"`
 	DisableDuplicationCheck bool                                      `yaml:"disable-duplication-check"`
+	ResourceFolder          string                                    `yaml:"resource-folder"`
 	NoteInfo                map[common.NoteTypeName]map[string]string `yaml:"note-info"`
 
 	noteInfoCacheByName  map[common.NoteTypeName]*common.NoteInfo

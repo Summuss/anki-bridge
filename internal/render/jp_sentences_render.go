@@ -82,5 +82,5 @@ func replaceCloze(ori string) string {
 }
 
 func (j jpSentencesRender) Match(model model.IModel) bool {
-	return model.CollectionName() == "jp_sentences"
+	return model.GetNoteTypeName() == common.NoteType_JPSentences_Name
 }

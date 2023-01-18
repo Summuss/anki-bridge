@@ -12,6 +12,8 @@ tts-cmd:
   - E:\SDK\nodejs\node.exe
   - E:\Code\Go\anki-bridge\oddcast_api.js
 
+resource-folder: D:\Documents\voice-records
+
 note-info:
   JPWords:
     title: Jp Words
@@ -29,3 +31,8 @@ note-info:
     title: Kanji
     desk: Japanese::Kanji
     anki-note-model: BasicTwoSideKanji
+  JPSentencesVoice:
+    title: Jp Sentences Audio
+    desk: Japanese::JPSentencesVoice
+    anki-note-model: BasicTwoSide
+

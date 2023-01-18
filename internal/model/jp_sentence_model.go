@@ -2,6 +2,7 @@ package model
 
 import (
 	"github.com/samber/lo"
+	"github.com/summuss/anki-bridge/internal/common"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -31,6 +32,9 @@ func (j *JPSentence) duplicationCheckQuery() interface{} {
 }
 
 func (m *JPSentence) GetResources() *[]Resource {
+	if m.GetNoteInfo().Name == common.NoteType_JPSentences_Voice_Name {
+		return m.resources
+	}
 	resources := lo.FlatMap(
 		*m.JPWords, func(item *JPWord, index int) []Resource {
 			return *item.resources

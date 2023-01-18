@@ -34,27 +34,13 @@ func (j jpWordsRender) Process(m model.IModel) (*anki.Card, error) {
     </div>
 </div>
 `
-	var t = struct {
-		*model.JPWord
-		WordClass string
-		Pitch     string
-		Sound     string
-	}{
+	var t = JPWordRenderObj{
 		JPWord:    jpWord,
 		WordClass: renderWordClasses(jpWord.WordClasses),
 		Pitch:     renderPitch(jpWord.Pitch),
 		Sound:     renderSounds(jpWord.GetResources()),
 	}
-	temp, err := template.New("JPWord").Parse(templStr)
-	if err != nil {
-		panic(err)
-	}
-	var buf bytes.Buffer
-	err = temp.Execute(&buf, t)
-	if err != nil {
-		return nil, err
-	}
-	bts, err := io.ReadAll(&buf)
+	bts, err := renderWordInfoByTempl(templStr, t)
 	if err != nil {
 		return nil, err
 	}
@@ -62,10 +48,34 @@ func (j jpWordsRender) Process(m model.IModel) (*anki.Card, error) {
 	noteInfo := config.Conf.GetNoteInfoByName(common.NoteType_JPWords_Name)
 	return &anki.Card{
 		Front:         jpWord.Mean,
-		Back:          string(bts),
+		Back:          bts,
 		Desk:          noteInfo.Desk,
 		AnkiNoteModel: noteInfo.AnkiNoteModel,
 	}, nil
+}
+
+func renderWordInfoByTempl(templStr string, t JPWordRenderObj) (string, error) {
+	temp, err := template.New("JPWord").Parse(templStr)
+	if err != nil {
+		panic(err)
+	}
+	var buf bytes.Buffer
+	err = temp.Execute(&buf, t)
+	if err != nil {
+		return "", err
+	}
+	bts, err := io.ReadAll(&buf)
+	if err != nil {
+		return "", err
+	}
+	return string(bts), nil
+}
+
+type JPWordRenderObj struct {
+	*model.JPWord
+	WordClass string
+	Pitch     string
+	Sound     string
 }
 
 func renderPitch(pitch string) string {
