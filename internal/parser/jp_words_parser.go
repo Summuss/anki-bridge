@@ -22,7 +22,7 @@ type JPWordsParser struct {
 	baseParser
 }
 
-func (w JPWordsParser) Match(note string, noteType common.NoteInfo) bool {
+func (w JPWordsParser) Match(note string, noteType *common.NoteInfo) bool {
 	return slices.Contains(
 		[]common.NoteTypeName{
 			common.NoteType_JPWords_Name, common.NoteType_JPRecognition_Name,
@@ -30,7 +30,7 @@ func (w JPWordsParser) Match(note string, noteType common.NoteInfo) bool {
 	)
 }
 
-func (w JPWordsParser) Check(note string, _ common.NoteInfo) error {
+func (w JPWordsParser) Check(note string, _ *common.NoteInfo) error {
 	notePreproc := common.PreprocessNote(note)
 	r, _ := regexp.Compile(`(?m)\A\s*^-\s*(?P<word>\S+.*)$\n^\t-\s*(?P<meaning>\S+.*)$\n^\t-\s*(?P<hiragana>\S+)\s+(?P<pitch>\S)\s+(?P<classes>.+)$\s*\z`)
 	if !r.MatchString(notePreproc) {
@@ -51,7 +51,7 @@ func (w JPWordsParser) Check(note string, _ common.NoteInfo) error {
 	return nil
 }
 
-func (w JPWordsParser) Parse(note string, noteType common.NoteInfo) (model.IModel, error) {
+func (w JPWordsParser) Parse(note string, noteType *common.NoteInfo) (model.IModel, error) {
 	notePreproc := common.PreprocessNote(note)
 	//FIXME:
 	r, _ := regexp.Compile(`(?m)\A\s*^-\s*(?P<word>\S+.*)$\n^\t-\s*(?P<meaning>\S+.*)$\n^\t-\s*(?P<hiragana>\S+)\s+(?P<pitch>\S)\s+(?P<classes>.+)$\s*\z`)

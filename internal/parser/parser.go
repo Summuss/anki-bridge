@@ -15,9 +15,9 @@ import (
 )
 
 type iParser interface {
-	Match(note string, noteType common.NoteInfo) bool
-	Check(note string, noteType common.NoteInfo) error
-	Parse(note string, noteType common.NoteInfo) (model.IModel, error)
+	Match(note string, noteType *common.NoteInfo) bool
+	Check(note string, noteType *common.NoteInfo) error
+	Parse(note string, noteType *common.NoteInfo) (model.IModel, error)
 	Priority() int
 }
 
@@ -81,7 +81,7 @@ func CheckInput(txt string) error {
 		noteInfo := noteInfo
 		subTxt := subTxt
 		go func() {
-			notes, err := splitter.Split(subTxt, *noteInfo)
+			notes, err := splitter.Split(subTxt, noteInfo)
 			if err != nil {
 				errCh <- err
 				return
@@ -89,11 +89,11 @@ func CheckInput(txt string) error {
 
 			err = common.DoParallel(
 				notes, func(note *string) error {
-					parser, err := findParser(*noteInfo, *note)
+					parser, err := findParser(noteInfo, *note)
 					if err != nil {
 						return err
 					}
-					err = parser.Check(*note, *noteInfo)
+					err = parser.Check(*note, noteInfo)
 					if err != nil {
 						return err
 					}
@@ -129,11 +129,11 @@ func Parse(text string) (*[]model.IModel, error) {
 			defer func() {
 				countCh <- 1
 			}()
-			notes, _ := splitter.Split(subTxt, *noteInfo)
+			notes, _ := splitter.Split(subTxt, noteInfo)
 			err := common.DoParallel(
 				notes, func(note *string) error {
-					parser, _ := findParser(*noteInfo, *note)
-					m, err := parser.Parse(*note, *noteInfo)
+					parser, _ := findParser(noteInfo, *note)
+					m, err := parser.Parse(*note, noteInfo)
 					if err != nil {
 						return err
 					}
@@ -175,7 +175,7 @@ func Parse(text string) (*[]model.IModel, error) {
 	return &res, nil
 }
 
-func findParser(noteInfo common.NoteInfo, note string) (iParser, error) {
+func findParser(noteInfo *common.NoteInfo, note string) (iParser, error) {
 	parserFlt := lo.Filter(
 		*parsers, func(item iParser, index int) bool {
 			return item.Match(note, noteInfo)

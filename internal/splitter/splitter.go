@@ -7,7 +7,7 @@ import (
 var splitters *[]splitter = &[]splitter{}
 
 type splitter interface {
-	TargetNoteType() common.NoteInfo
+	TargetNoteType() *common.NoteInfo
 	Split(string) (*[]string, error)
 }
 
@@ -19,7 +19,7 @@ func (s simpleSplitter) Split(rawNotes string) (*[]string, error) {
 
 }
 
-func Split(subText string, noteType common.NoteInfo) (*[]string, error) {
+func Split(subText string, noteType *common.NoteInfo) (*[]string, error) {
 	for i := 0; i < len(*splitters); i++ {
 		if (*splitters)[i].TargetNoteType() == noteType {
 			return (*splitters)[i].Split(subText)

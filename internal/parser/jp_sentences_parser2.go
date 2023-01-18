@@ -43,11 +43,11 @@ func (p JPSentencesParser2) Priority() int {
 	return -1
 }
 
-func (J JPSentencesParser2) Match(note string, noteType common.NoteInfo) bool {
+func (J JPSentencesParser2) Match(note string, noteType *common.NoteInfo) bool {
 	return common.NoteType_JPSentences_Name == noteType.Name && jpSentencesParser2Pattern.MatchString(note)
 }
 
-func (J JPSentencesParser2) Check(note string, _ common.NoteInfo) error {
+func (J JPSentencesParser2) Check(note string, _ *common.NoteInfo) error {
 	notePreproc := common.PreprocessNote(note)
 	if !jpSentencesParser2Pattern.MatchString(notePreproc) {
 		return fmt.Errorf("note synatx error:\n%s", note)
@@ -58,7 +58,7 @@ func (J JPSentencesParser2) Check(note string, _ common.NoteInfo) error {
 	wordsRaw = strings.ReplaceAll(wordsRaw, "#[[Jp Words]]", "")
 	additionRaw := submatches[jpSentencesParser2Pattern.SubexpIndex("addition")]
 	additionRaw = common.UnIndent(additionRaw)
-	wordNoteInfo := *config.Conf.GetNoteInfoByName(common.NoteType_JPWords_Name)
+	wordNoteInfo := config.Conf.GetNoteInfoByName(common.NoteType_JPWords_Name)
 	word_notes, err := splitter.Split(wordsRaw, wordNoteInfo)
 	if err != nil {
 		return fmt.Errorf("%s\n in note:\n%s", err.Error(), note)
@@ -75,14 +75,14 @@ func (J JPSentencesParser2) Check(note string, _ common.NoteInfo) error {
 	return common.MergeErrors(errorList)
 }
 
-func (J JPSentencesParser2) Parse(note string, noteType common.NoteInfo) (model.IModel, error) {
+func (J JPSentencesParser2) Parse(note string, noteType *common.NoteInfo) (model.IModel, error) {
 	notePreproc := common.PreprocessNote(note)
 	submatches := jpSentencesParser2Pattern.FindStringSubmatch(notePreproc)
 	sentence := submatches[jpSentencesParser2Pattern.SubexpIndex("sentence")]
 	wordsRaw := submatches[jpSentencesParser2Pattern.SubexpIndex("words")]
 	wordsRaw = common.UnIndent(wordsRaw)
 	wordsRaw = strings.ReplaceAll(wordsRaw, "#[[Jp Words]]", "")
-	wordNoteInfo := *config.Conf.GetNoteInfoByName(common.NoteType_JPWords_Name)
+	wordNoteInfo := config.Conf.GetNoteInfoByName(common.NoteType_JPWords_Name)
 	word_notes, _ := splitter.Split(wordsRaw, wordNoteInfo)
 	var err error
 	words := lo.Map(

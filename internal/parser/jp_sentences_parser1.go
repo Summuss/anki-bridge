@@ -20,13 +20,13 @@ type JPSentencesParser1 struct {
 	baseParser
 }
 
-func (J JPSentencesParser1) Match(note string, noteType common.NoteInfo) bool {
+func (J JPSentencesParser1) Match(note string, noteType *common.NoteInfo) bool {
 	return common.NoteType_JPSentences_Name == noteType.Name && jpSentencesParser1Pattern.MatchString(note)
 }
 
 var jpSentencesParser1Pattern = regexp.MustCompile(`(?m)\A\s*^-\s*(?P<Sentence>\S+.*$)(?P<Words>(\n^\t-\s*.+$\n^\t\t-\s*.+$\n^\t\t-\s*.+$)+)\s*\z`)
 
-func (J JPSentencesParser1) Check(note string, _ common.NoteInfo) error {
+func (J JPSentencesParser1) Check(note string, _ *common.NoteInfo) error {
 	notePreproc := common.PreprocessNote(note)
 	if !jpSentencesParser1Pattern.MatchString(notePreproc) {
 		return fmt.Errorf("note synatx error:\n%s", note)
@@ -34,7 +34,7 @@ func (J JPSentencesParser1) Check(note string, _ common.NoteInfo) error {
 	submatches := jpSentencesParser1Pattern.FindStringSubmatch(notePreproc)
 	wordsRaw := submatches[jpSentencesParser1Pattern.SubexpIndex("Words")]
 	wordsRaw = common.UnIndent(wordsRaw)
-	wordNoteInfo := *config.Conf.GetNoteInfoByName(common.NoteType_JPWords_Name)
+	wordNoteInfo := config.Conf.GetNoteInfoByName(common.NoteType_JPWords_Name)
 	word_notes, err := splitter.Split(wordsRaw, wordNoteInfo)
 	if err != nil {
 		return fmt.Errorf("%s\n in note:\n%s", err.Error(), note)
@@ -51,14 +51,14 @@ func (J JPSentencesParser1) Check(note string, _ common.NoteInfo) error {
 	return common.MergeErrors(errorList)
 }
 
-func (J JPSentencesParser1) Parse(note string, noteType common.NoteInfo) (model.IModel, error) {
+func (J JPSentencesParser1) Parse(note string, noteType *common.NoteInfo) (model.IModel, error) {
 	notePreproc := common.PreprocessNote(note)
 	r, _ := regexp.Compile(`(?m)\A\s*^-\s*(?P<Sentence>\S+.*$)(?P<Words>(\n^\t-\s*.+$\n^\t\t-\s*.+$\n^\t\t-\s*.+$)+)\s*\z`)
 	submatches := r.FindStringSubmatch(notePreproc)
 	sentence := submatches[r.SubexpIndex("Sentence")]
 	wordsRaw := submatches[r.SubexpIndex("Words")]
 	wordsRaw = common.UnIndent(wordsRaw)
-	wordNoteInfo := *config.Conf.GetNoteInfoByName(common.NoteType_JPWords_Name)
+	wordNoteInfo := config.Conf.GetNoteInfoByName(common.NoteType_JPWords_Name)
 	word_notes, _ := splitter.Split(wordsRaw, wordNoteInfo)
 	var err error
 	words := lo.Map(
