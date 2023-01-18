@@ -4,85 +4,12 @@ import (
 	"github.com/summuss/anki-bridge/internal/common"
 	"github.com/summuss/anki-bridge/internal/config"
 	"github.com/summuss/anki-bridge/internal/model"
+	"reflect"
 	"strings"
 	"testing"
 )
 
-func TestJPWordsParser_Check(t *testing.T) {
-	type args struct {
-		note string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		{
-			name: "1",
-			args: args{
-				note: `- 出来事
-	- (偶发)的事件，变故。（持ち上がった事件・事柄。）
-	- できごと 2 １ 3`,
-			},
-			wantErr: false,
-		},
-		{
-			name: "2",
-			args: args{
-				note: `- 出来事
-	- (偶发)的事件，变故。（持ち上がった事件・事柄。）
-	- できごと 2 １ `,
-			},
-			wantErr: false,
-		},
-
-		{
-			name: "3",
-			args: args{
-				note: `- 出来事
-	- (偶发)的事件，变故。（持ち上がった事件・事柄。）
-	- できごと 2 １ X`,
-			},
-			wantErr: true,
-		},
-		{
-			name: "start and end with space",
-			args: args{
-				note: `
-- 出来事
-	- (偶发)的事件，变故。（持ち上がった事件・事柄。）
-	- できごと 2 １ 
-`,
-			},
-			wantErr: false,
-		},
-		{
-			name: "meaning contain space",
-			args: args{
-				note: `
-- 出来事
-	- (偶发)的事件，  变故。（持ち上がった事件・事柄。）
-	- できごと 2 １ 
-`,
-			},
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(
-			tt.name, func(t *testing.T) {
-				w := JPWordsParser{}
-				if err := w.Check(
-					tt.args.note, *config.Conf.GetNoteInfoByName(common.NoteType_JPWords_Name),
-				); (err != nil) != tt.wantErr {
-					t.Errorf("Check() error = %v, wantErr %v", err, tt.wantErr)
-				}
-			},
-		)
-	}
-}
-
-func TestJPWordsParser_Parse(t *testing.T) {
+func TestJPWordsParser_MiddleParse(t *testing.T) {
 	type args struct {
 		note string
 	}
@@ -112,21 +39,33 @@ func TestJPWordsParser_Parse(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "word class error",
+			args: args{
+				note: `
+- 出来事
+	- (偶发)的事件，变故。（持ち上がった事件・事柄。）
+	- できごと 2 A X
+
+`,
+			},
+			want:    nil,
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(
 			tt.name, func(t *testing.T) {
 				w := JPWordsParser{}
-				got, err := w.Parse(
-					tt.args.note, *config.Conf.GetNoteInfoByName(common.NoteType_JPWords_Name),
+				got, err := w.MiddleParse(
+					tt.args.note, config.Conf.GetNoteInfoByName(common.NoteType_JPWords_Name),
 				)
 				if (err != nil) != tt.wantErr {
-					t.Errorf("Parse() error = %v, wantErr %v", err, tt.wantErr)
+					t.Errorf("MiddleParse() error = %v, wantErr %v", err, tt.wantErr)
 					return
 				}
-
-				if len(*got.GetResources()) == 0 {
-					t.Errorf("resource not found")
+				if !reflect.DeepEqual(got, tt.want) {
+					t.Errorf("MiddleParse() got = %v, want %v", got, tt.want)
 				}
 			},
 		)

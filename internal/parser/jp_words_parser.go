@@ -30,34 +30,24 @@ func (w JPWordsParser) Match(note string, noteType *common.NoteInfo) bool {
 	)
 }
 
-func (w JPWordsParser) Check(note string, _ *common.NoteInfo) error {
+func (w JPWordsParser) MiddleParse(note string, noteType *common.NoteInfo) (model.IModel, error) {
 	notePreproc := common.PreprocessNote(note)
 	r, _ := regexp.Compile(`(?m)\A\s*^-\s*(?P<word>\S+.*)$\n^\t-\s*(?P<meaning>\S+.*)$\n^\t-\s*(?P<hiragana>\S+)\s+(?P<pitch>\S)\s+(?P<classes>.+)$\s*\z`)
 	if !r.MatchString(notePreproc) {
-		return fmt.Errorf("synatx error in word\n%s", note)
+		return nil, fmt.Errorf("synatx error in word\n%s", note)
 	}
 	submatches := r.FindStringSubmatch(notePreproc)
 	classesStr := submatches[r.SubexpIndex("classes")]
 	classes := common.SplitWithTrimAndOmitEmpty(classesStr, " ")
 	if len(classes) == 0 {
-		return fmt.Errorf("word classes not found in word\n%s", note)
+		return nil, fmt.Errorf("word classes not found in word\n%s", note)
 	}
 	for _, class := range classes {
 		err := checkWordClass(class)
 		if err != nil {
-			return fmt.Errorf("%s in word\n%s", err.Error(), note)
+			return nil, fmt.Errorf("%s in word\n%s", err.Error(), note)
 		}
 	}
-	return nil
-}
-
-func (w JPWordsParser) Parse(note string, noteType *common.NoteInfo) (model.IModel, error) {
-	notePreproc := common.PreprocessNote(note)
-	//FIXME:
-	r, _ := regexp.Compile(`(?m)\A\s*^-\s*(?P<word>\S+.*)$\n^\t-\s*(?P<meaning>\S+.*)$\n^\t-\s*(?P<hiragana>\S+)\s+(?P<pitch>\S)\s+(?P<classes>.+)$\s*\z`)
-	submatches := r.FindStringSubmatch(notePreproc)
-	classesStr := submatches[r.SubexpIndex("classes")]
-	classes := common.SplitWithTrimAndOmitEmpty(classesStr, " ")
 	word := submatches[r.SubexpIndex("word")]
 	meaning := submatches[r.SubexpIndex("meaning")]
 	hiragana := submatches[r.SubexpIndex("hiragana")]
@@ -68,6 +58,23 @@ func (w JPWordsParser) Parse(note string, noteType *common.NoteInfo) (model.IMod
 			return int(res)
 		},
 	)
+	jpWord := &model.JPWord{
+		Hiragana: hiragana, Mean: meaning, Pitch: pitch, Spell: word, WordClasses: classes_int,
+	}
+
+	return jpWord, nil
+}
+
+func (w JPWordsParser) PostParse(iModel model.IModel) (model.IModel, error) {
+	jpWord := iModel.(*model.JPWord)
+	noteInfo := iModel.GetNoteInfo()
+	word := jpWord.Spell
+	var noTTSFlg bool
+	common.FetchExtraByKey(noteInfo, common.NO_JPWORD_TTS, &noTTSFlg)
+	if noTTSFlg {
+		return jpWord, nil
+	}
+
 	maleURL, femaleURL, err := getTTSURL(word)
 	if err != nil {
 		return nil, err
@@ -79,16 +86,6 @@ func (w JPWordsParser) Parse(note string, noteType *common.NoteInfo) (model.IMod
 	data2, err := common.CurlGetData(femaleURL)
 	if err != nil {
 		return nil, fmt.Errorf("download tts from %s failed,error:\n%s", femaleURL, err.Error())
-	}
-
-	jpWord := &model.JPWord{
-		Hiragana: hiragana, Mean: meaning, Pitch: pitch, Spell: word, WordClasses: classes_int,
-	}
-
-	var noTTSFlg bool
-	common.FetchExtraByKey(noteType, common.NO_JPWORD_TTS, &noTTSFlg)
-	if noTTSFlg {
-		return jpWord, nil
 	}
 
 	resource1 := &model.Resource{

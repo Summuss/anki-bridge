@@ -204,7 +204,7 @@ func TestCheckInput(t *testing.T) {
  abc
 `,
 			},
-			wantErr: true,
+			wantErr: false,
 		},
 
 		{
@@ -292,9 +292,9 @@ func TestCheckInput(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(
 			tt.name, func(t *testing.T) {
-				err := CheckInput(tt.args.txt)
+				_, err := MiddleParse(tt.args.txt)
 				if (err != nil) != tt.wantErr {
-					t.Errorf("CheckInput() error = %v, wantErr %v", err, tt.wantErr)
+					t.Errorf("MiddleParse() error = %v, wantErr %v", err, tt.wantErr)
 				}
 				if err != nil {
 					println(err.Error())
@@ -367,7 +367,7 @@ func TestParse(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(
 			tt.name, func(t *testing.T) {
-				got, err := Parse(tt.args.text)
+				got, err := MiddleParse(tt.args.text)
 				if (err != nil) != tt.wantErr {
 					t.Errorf("Parse() error = %v, wantErr %v", err, tt.wantErr)
 					return

@@ -37,6 +37,15 @@ type IModel interface {
 	SetNoteTypeName(noteTypeName common.NoteTypeName)
 	GetNoteTypeName() common.NoteTypeName
 
+	// set after middle parse finished
+	SetMiddleInfo(info interface{})
+	GetMiddleInfo() interface{}
+	// to avoid cycle import, use interface{} instead of parser.iParser
+	GetParser() interface{}
+	SetParser(interface{})
+	GetNoteInfo() *common.NoteInfo
+	SetNoteInfo(*common.NoteInfo)
+
 	// for Concrete Model Impl
 	CollectionName() string
 	Save(client *mongo.Client, dbName string) error
@@ -53,6 +62,9 @@ type BaseModel struct {
 	NoteType    common.NoteTypeName   `json:"note_type" bson:"note_type"`
 	Resources   *[]primitive.ObjectID `json:"resources" bson:"resources"`
 	resources   *[]Resource
+	noteInfo    *common.NoteInfo
+	parser      interface{}
+	middleInfo  interface{}
 }
 
 func (m *BaseModel) GetID() primitive.ObjectID {
@@ -100,6 +112,28 @@ func (m *BaseModel) SetNoteTypeName(noteTypeName common.NoteTypeName) {
 }
 func (m *BaseModel) GetNoteTypeName() common.NoteTypeName {
 	return m.NoteType
+}
+
+func (m *BaseModel) SetMiddleInfo(info interface{}) {
+	m.middleInfo = info
+}
+func (m *BaseModel) GetMiddleInfo() interface{} {
+	return m.middleInfo
+}
+
+func (m *BaseModel) SetNoteInfo(n *common.NoteInfo) {
+	m.noteInfo = n
+}
+
+func (m *BaseModel) GetNoteInfo() *common.NoteInfo {
+	return m.noteInfo
+}
+func (m *BaseModel) GetParser() interface{} {
+	return m.parser
+}
+
+func (m *BaseModel) SetParser(p interface{}) {
+	m.parser = p
 }
 
 func getZeroModel() BaseModel {

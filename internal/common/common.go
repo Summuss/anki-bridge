@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"io"
 	"net/http"
+	"os"
 	"os/exec"
 	"strings"
 )
@@ -47,4 +48,12 @@ func CurlGetData(url string) (*[]byte, error) {
 	}
 
 	return &body, nil
+}
+
+func FileExists(filename string) bool {
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
 }

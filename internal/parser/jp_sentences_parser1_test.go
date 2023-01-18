@@ -94,8 +94,8 @@ xx
 		t.Run(
 			tt.name, func(t *testing.T) {
 				J := JPSentencesParser1{}
-				if err := J.Check(
-					tt.args.note, *config.Conf.GetNoteInfoByName(common.NoteType_JPSentences_Name),
+				if _, err := J.MiddleParse(
+					tt.args.note, config.Conf.GetNoteInfoByName(common.NoteType_JPSentences_Name),
 				); (err != nil) != tt.wantErr {
 					t.Errorf("Check() error = %v, wantErr %v", err, tt.wantErr)
 				}
@@ -134,7 +134,6 @@ func TestJPSentencesParser_Parse(t *testing.T) {
 `,
 			},
 			want: &model.JPSentence{
-				BaseModel:   model.BaseModel{},
 				Sentence:    "原因不明の病に {{cloze 冒される}} ので",
 				Explanation: "",
 				JPWords:     &[]*model.JPWord{word},
@@ -146,16 +145,23 @@ func TestJPSentencesParser_Parse(t *testing.T) {
 		t.Run(
 			tt.name, func(t *testing.T) {
 				J := JPSentencesParser1{}
-				got, err := J.Parse(
-					tt.args.note, *config.Conf.GetNoteInfoByName(common.NoteType_JPSentences_Name),
+				got, err := J.MiddleParse(
+					tt.args.note, config.Conf.GetNoteInfoByName(common.NoteType_JPSentences_Name),
 				)
+				words := got.(*model.JPSentence).JPWords
+				for _, word := range *words {
+					word.SetNoteInfo(nil)
+					word.SetParser(nil)
+				}
+
 				if (err != nil) != tt.wantErr {
 					t.Errorf("Parse() error = %v, wantErr %v", err, tt.wantErr)
 					return
 				}
 
 				if !reflect.DeepEqual(got, tt.want) {
-					t.Errorf("Parse() got = %v, want %v", got, tt.want)
+					t.Errorf("Parse() got = %v", got)
+					t.Errorf("Parse()  want %v", tt.want)
 				}
 			},
 		)

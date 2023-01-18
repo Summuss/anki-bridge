@@ -47,7 +47,7 @@ func TestJPSentencesParser2_Check(t *testing.T) {
 		t.Run(
 			tt.name, func(t *testing.T) {
 				J := JPSentencesParser2{baseParser{}}
-				if err := J.Check(tt.args.note, tt.args.in1); (err != nil) != tt.wantErr {
+				if _, err := J.MiddleParse(tt.args.note, &tt.args.in1); (err != nil) != tt.wantErr {
 					t.Errorf("Check() error = %v, wantErr %v", err, tt.wantErr)
 				}
 			},
@@ -117,7 +117,13 @@ func TestJPSentencesParser2_Parse(t *testing.T) {
 				J := JPSentencesParser2{
 					baseParser{},
 				}
-				got, err := J.Parse(tt.args.note, tt.args.noteType)
+				got, err := J.MiddleParse(tt.args.note, &tt.args.noteType)
+				words := got.(*model.JPSentence).JPWords
+				for _, word := range *words {
+					word.SetNoteInfo(nil)
+					word.SetParser(nil)
+				}
+
 				if (err != nil) != tt.wantErr {
 					t.Errorf("Parse() error = %v, wantErr %v", err, tt.wantErr)
 					return

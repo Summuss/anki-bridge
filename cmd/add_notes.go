@@ -92,11 +92,11 @@ var addNotesCMD = &cobra.Command{
 
 func addNotes(text string) error {
 	text = common.RemoveExtraInfo(text)
-	err := parser.CheckInput(text)
+	ms, err := parser.MiddleParse(text)
 	if err != nil {
 		return fmt.Errorf("input check error:\n%s", err.Error())
 	}
-	ms, err := parser.Parse(text)
+	ms, err = parser.FinalParse(ms)
 	if err != nil {
 		return fmt.Errorf("parse error:\n %s", err.Error())
 	}

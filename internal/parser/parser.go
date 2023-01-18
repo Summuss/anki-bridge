@@ -3,6 +3,7 @@ package parser
 import (
 	"errors"
 	"fmt"
+	"github.com/hashicorp/go-multierror"
 	"github.com/samber/lo"
 	"github.com/summuss/anki-bridge/internal/common"
 	"github.com/summuss/anki-bridge/internal/config"
@@ -11,13 +12,12 @@ import (
 	"golang.org/x/exp/slices"
 	"regexp"
 	"strings"
-	"time"
 )
 
 type iParser interface {
 	Match(note string, noteType *common.NoteInfo) bool
-	Check(note string, noteType *common.NoteInfo) error
-	Parse(note string, noteType *common.NoteInfo) (model.IModel, error)
+	MiddleParse(note string, noteType *common.NoteInfo) (model.IModel, error)
+	PostParse(iModel model.IModel) (model.IModel, error)
 	Priority() int
 }
 
@@ -63,20 +63,21 @@ func splitByNoteType(content string) (map[*common.NoteInfo]string, error) {
 	return noteTypeName2SubTxt, nil
 }
 
-func CheckInput(txt string) error {
+func MiddleParse(txt string) (*[]model.IModel, error) {
 	r, _ := regexp.Compile(`(?m)\A(\s*^\S+.*(\n^\t+.*$)*)*\s*\z`)
 	if !r.MatchString(txt) {
-		return errors.New("input structure error")
+		return nil, errors.New("input structure error")
 	}
 	noteTypeInfo2SubTxt, err := splitByNoteType(txt)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	size := len(noteTypeInfo2SubTxt)
 	if size == 0 {
-		return nil
+		return nil, nil
 	}
 	errCh := make(chan error, size)
+	modelCh := make(chan model.IModel, 20)
 	for noteInfo, subTxt := range noteTypeInfo2SubTxt {
 		noteInfo := noteInfo
 		subTxt := subTxt
@@ -93,10 +94,15 @@ func CheckInput(txt string) error {
 					if err != nil {
 						return err
 					}
-					err = parser.Check(*note, noteInfo)
+					m, err := parser.MiddleParse(*note, noteInfo)
 					if err != nil {
 						return err
 					}
+
+					m.SetNoteInfo(noteInfo)
+					m.SetParser(parser)
+					m.SetNoteTypeName(noteInfo.Name)
+					modelCh <- m
 					return nil
 				},
 			)
@@ -104,75 +110,43 @@ func CheckInput(txt string) error {
 		}()
 	}
 	var errList []error
-	for i := 0; i < size; i++ {
-		errList = append(errList, <-errCh)
+	var modelList []model.IModel
+	for len(errList) != size {
+		select {
+		case err := <-errCh:
+			errList = append(errList, err)
+		case m := <-modelCh:
+			modelList = append(modelList, m)
+		}
 	}
-	return common.MergeErrors(errList)
+	close(modelCh)
+	modelList = append(modelList, lo.ChannelToSlice(modelCh)...)
+	return &modelList, common.MergeErrors(errList)
 }
 
-func Parse(text string) (*[]model.IModel, error) {
-	var res []model.IModel
-	noteTypeInfo2SubTxt, _ := splitByNoteType(text)
-	size := len(noteTypeInfo2SubTxt)
-	if size == 0 {
-		return &res, nil
-	}
+func FinalParse(middleModelList *[]model.IModel) (*[]model.IModel, error) {
+	size := len(*middleModelList)
+	modelCh := make(chan model.IModel, size)
+	var merr *multierror.Error
 
-	modelCh := make(chan model.IModel, 10)
-	errCh := make(chan error, size)
-	countCh := make(chan int, size)
+	_ = common.DoParallel(
+		middleModelList, func(m *model.IModel) error {
+			parser := (*m).GetParser().(iParser)
+			m2, err := parser.PostParse(*m)
+			merr = multierror.Append(merr, err)
+			modelCh <- m2
+			return nil
+		},
+	)
+	var ms []model.IModel
+	for i := 0; i < size; i++ {
+		ms = append(ms, <-modelCh)
+	}
+	if merr.ErrorOrNil() != nil {
+		return nil, merr.ErrorOrNil()
+	}
+	return &ms, nil
 
-	for noteInfo, subTxt := range noteTypeInfo2SubTxt {
-		noteInfo := noteInfo
-		subTxt := subTxt
-		go func() {
-			defer func() {
-				countCh <- 1
-			}()
-			notes, _ := splitter.Split(subTxt, noteInfo)
-			err := common.DoParallel(
-				notes, func(note *string) error {
-					parser, _ := findParser(noteInfo, *note)
-					m, err := parser.Parse(*note, noteInfo)
-					if err != nil {
-						return err
-					}
-					m.SetNoteTypeName(noteInfo.Name)
-					modelCh <- m
-					return nil
-				},
-			)
-			if err != nil {
-				errCh <- err
-				return
-			}
-		}()
-	}
-	var count int
-	for {
-		if count == size {
-			close(errCh)
-			close(modelCh)
-			break
-		}
-		select {
-		case m := <-modelCh:
-			res = append(res, m)
-		case <-countCh:
-			count++
-		default:
-			time.Sleep(20 * time.Millisecond)
-		}
-	}
-	for m := range modelCh {
-		res = append(res, m)
-	}
-
-	err := common.MergeErrors(lo.ChannelToSlice(errCh))
-	if err != nil {
-		return nil, err
-	}
-	return &res, nil
 }
 
 func findParser(noteInfo *common.NoteInfo, note string) (iParser, error) {
@@ -183,7 +157,7 @@ func findParser(noteInfo *common.NoteInfo, note string) (iParser, error) {
 	)
 	if len(parserFlt) < 1 {
 		return nil, fmt.Errorf(
-			"can't found parser for note type of %s and note:\n%s", noteInfo, note,
+			"can't found parser for note type of %v and note:\n%s", noteInfo, note,
 		)
 	} else if len(parserFlt) > 1 {
 		slices.SortFunc(
@@ -193,7 +167,7 @@ func findParser(noteInfo *common.NoteInfo, note string) (iParser, error) {
 		)
 		if parserFlt[0].Priority() == parserFlt[1].Priority() {
 			return nil, fmt.Errorf(
-				"found multiple parser with same priority for note type of %s", noteInfo,
+				"found multiple parser with same priority for note type of %v", noteInfo,
 			)
 		}
 		return parserFlt[0], nil

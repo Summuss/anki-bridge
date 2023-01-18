@@ -1,6 +1,13 @@
 package cmd
 
-import "testing"
+import (
+	"github.com/summuss/anki-bridge/internal/anki"
+	"github.com/summuss/anki-bridge/internal/config"
+	"github.com/summuss/anki-bridge/internal/model"
+	"github.com/summuss/anki-bridge/internal/render"
+	"go.mongodb.org/mongo-driver/bson"
+	"testing"
+)
 
 func TestAddNotes(t *testing.T) {
 	type args struct {
@@ -14,7 +21,7 @@ func TestAddNotes(t *testing.T) {
 		{
 			name: "1", args: args{
 				text: `
-- [[认识]]
+- [[Jp Recognition]]
 	- 後回し
 		- 推迟，往后推，缓办。（順番を変えてあとに遅らせること。）2
 		- あとまわし　3　１
@@ -50,5 +57,34 @@ func TestAddNotes(t *testing.T) {
 				}
 			},
 		)
+	}
+}
+
+func Test_find_kanji(t *testing.T) {
+	dao := model.GetDao(model.MongoClient, "test", &model.Kanji{})
+	res, err := dao.FindMany(bson.D{{"kanji", "一"}})
+	if err != nil {
+		panic(err)
+	}
+	for _, item := range *res {
+		card, err := render.Render(item)
+		if err != nil {
+			panic(err)
+		}
+		card.ModelID = item.ID.Hex()
+		card.Collection = item.CollectionName()
+		err = anki.AddCard(card)
+		if err != nil {
+			panic(err)
+		}
+		item.SetAnkiNoteId(card.ID)
+		err = item.Save(model.MongoClient, config.Conf.DBName)
+		if err != nil {
+			panic(err)
+		}
+
+	}
+	if len(*res) == 0 {
+		t.Errorf("empty")
 	}
 }
