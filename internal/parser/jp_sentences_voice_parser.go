@@ -8,8 +8,10 @@ import (
 	"github.com/summuss/anki-bridge/internal/config"
 	"github.com/summuss/anki-bridge/internal/model"
 	"github.com/summuss/anki-bridge/internal/splitter"
+	"log"
 	"os"
 	"path"
+	"path/filepath"
 	"regexp"
 	"strings"
 )
@@ -53,8 +55,14 @@ func (J JPSentencesVoiceParser) MiddleParse(note string, noteType *common.NoteIn
 
 	sentence := submatches[jpSentencesVoiceParserPattern.SubexpIndex("sentence")]
 	fileName := submatches[jpSentencesVoiceParserPattern.SubexpIndex("file")]
-	filePath := path.Join(config.Conf.ResourceFolder, fileName)
-	if !common.FileExists(filePath) {
+	var filePath string
+	filePath1 := path.Join(config.Conf.ResourceFolder, fileName)
+	filePath2 := path.Join(getProcessedVoiceLocation(), fileName)
+	if common.FileExists(filePath1) {
+		filePath = filePath1
+	} else if common.FileExists(filePath2) {
+		filePath = filePath2
+	} else {
 		return nil, fmt.Errorf("resource file %s not exist", filePath)
 	}
 
@@ -114,5 +122,42 @@ func (J JPSentencesVoiceParser) PostParse(iModel model.IModel) (model.IModel, er
 
 	jpSentence.SetResources(&[]model.Resource{*resource})
 
+	err = moveVoiceFile(filePath)
+	if err != nil {
+		log.Printf("warning: move %s failed, %s\n", filePath, err.Error())
+	}
+
 	return jpSentence, nil
+}
+
+func moveVoiceFile(filePath string) error {
+	if filepath.Dir(filePath) == config.Conf.ResourceFolder {
+		location := getProcessedVoiceLocation()
+		stat, err := os.Stat(location)
+		if os.IsNotExist(err) {
+			err := os.Mkdir(location, os.ModeDir)
+			if err != nil {
+				return fmt.Errorf(
+					"create dictionary %s for processed voice failed, %s", location, err.Error(),
+				)
+			}
+		} else {
+			if !stat.IsDir() {
+				return fmt.Errorf("%s is not a dir", location)
+			}
+		}
+
+		filename := filepath.Base(filePath)
+		err = common.MoveFile(filePath, path.Join(location, filename))
+		if err != nil {
+			return fmt.Errorf(
+				"move file %s to %s failed, %s", filePath, config.Conf.ResourceFolder, err.Error(),
+			)
+		}
+	}
+	return nil
+}
+
+func getProcessedVoiceLocation() string {
+	return path.Join(config.Conf.ResourceFolder, "processed")
 }

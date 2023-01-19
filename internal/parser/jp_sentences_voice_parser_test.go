@@ -198,3 +198,15 @@ func TestJPSentencesVoiceParser_PostParse(t *testing.T) {
 		)
 	}
 }
+
+func Test_moveVoiceFile(t *testing.T) {
+	err := moveVoiceFile("D:\\Documents\\voice-records\\新規 テキスト ドキュメント.txt")
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	err = moveVoiceFile("D:\\Documents\\voice-records\\processed\\新規 テキスト ドキュメント.txt")
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+}
