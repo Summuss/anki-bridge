@@ -23,8 +23,13 @@ type jpSentencesVoiceRender struct {
 func (j jpSentencesVoiceRender) Process(m model.IModel) (*anki.Card, error) {
 	jpSentence := m.(*model.JPSentence)
 	noteInfo := config.Conf.GetNoteInfoByName(common.NoteType_JPSentences_Voice_Name)
+	sounds := lo.Map(
+		*jpSentence.GetResources(), func(item model.Resource, _ int) string {
+			return fmt.Sprintf("[sound:%s]", item.Metadata.FileName)
+		},
+	)
 	return &anki.Card{
-		Front:         fmt.Sprintf("[sound:%s]", (*jpSentence.GetResources())[0].Metadata.FileName),
+		Front:         strings.Join(sounds, " "),
 		Back:          renderBack(jpSentence),
 		Desk:          noteInfo.Desk,
 		AnkiNoteModel: noteInfo.AnkiNoteModel,

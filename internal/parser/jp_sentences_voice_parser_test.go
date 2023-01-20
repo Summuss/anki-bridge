@@ -14,16 +14,17 @@ func TestJPSentencesVoiceParser_Parse(t *testing.T) {
 		noteType *common.NoteInfo
 	}
 	tests := []struct {
-		name    string
-		args    args
-		want    model.IModel
-		wantErr bool
+		name           string
+		args           args
+		want           model.IModel
+		wantMiddleInfo interface{}
+		wantErr        bool
 	}{
 		{
 			name: "1",
 			args: args{
 				note: `
-- #FILENAME [2023-01-16][20-52-30].mp3
+- #FILENAME [2023-01-16][20-52-30].mp3 #FILENAME [2023-01-16][20-42-56].mp3
 	- あれが[[#red]]==偏屈==じゃなくて何なんだ！
 	- 偏屈#[[Jp Words]]
 		- 怪癖，乖僻，顽固，别扭；古怪；孤僻。（性質が、ねじけていること）
@@ -50,6 +51,12 @@ func TestJPSentencesVoiceParser_Parse(t *testing.T) {
 						Spell:       "偏屈",
 						WordClasses: []int{1},
 					},
+				},
+			},
+			wantMiddleInfo: &jPSentencesVoiceMiddleInfo{
+				filePaths: []string{
+					"D:\\Documents\\voice-records/processed/[2023-01-16][20-52-30].mp3",
+					"D:\\Documents\\voice-records/[2023-01-16][20-42-56].mp3",
 				},
 			},
 			wantErr: false,
@@ -134,6 +141,7 @@ func TestJPSentencesVoiceParser_Parse(t *testing.T) {
 					t.Errorf("Parse() error = %v, wantErr %v", err, tt.wantErr)
 					return
 				}
+				tt.want.SetMiddleInfo(tt.wantMiddleInfo)
 				if !reflect.DeepEqual(got, tt.want) {
 					t.Errorf("Parse() got = %v", got)
 					t.Errorf("Parse() want %v", tt.want)
@@ -167,7 +175,14 @@ func TestJPSentencesVoiceParser_PostParse(t *testing.T) {
 			},
 		},
 	}
-	jpSentence.SetMiddleInfo(&jPSentencesVoiceMiddleInfo{filePath: "D:\\Documents\\voice-records\\[2023-01-16][20-52-30].mp3"})
+	jpSentence.SetMiddleInfo(
+		&jPSentencesVoiceMiddleInfo{
+			filePaths: []string{
+				"D:\\Documents\\voice-records/processed/[2023-01-16][20-52-30].mp3",
+				"D:\\Documents\\voice-records/[2023-01-16][20-42-56].mp3",
+			},
+		},
+	)
 	jpSentence.SetNoteInfo(config.Conf.GetNoteInfoByName(common.NoteType_JPSentences_Voice_Name))
 	tests := []struct {
 		name    string
@@ -191,7 +206,7 @@ func TestJPSentencesVoiceParser_PostParse(t *testing.T) {
 					t.Errorf("PostParse() error = %v, wantErr %v", err, tt.wantErr)
 					return
 				}
-				if len(*got.GetResources()) == 0 {
+				if len(*got.GetResources()) != 2 {
 					t.Errorf("resource not filled")
 				}
 			},

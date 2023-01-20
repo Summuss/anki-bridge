@@ -23,21 +23,21 @@ func init() {
 }
 
 var _ = `
-- #FILENAME [2023-01-16][20-52-30].mp3
+- #FILENAME [2023-01-16][20-52-30].mp3 #FILENAME [2023-01-16][20-52-32].mp3
 	- あれが[[#red]]==偏屈==じゃなくて何なんだ！
 	- 偏屈#[[Jp Words]]
 		- 怪癖，乖僻，顽固，别扭；古怪；孤僻。（性質が、ねじけていること）
 		- へんくつ 1 1
 (?m)\A\s*^- #FILENAME (?P<file>\S+$)(\n^\t- \s*(?P<sentence1>.*?)\s*$)?(?P<words>(\n^\t- \S+\s*#\[\[Jp Words]]$\n^\t\t- .*$\n^\t\t- .*$)*)\s*\z
 `
-var jpSentencesVoiceParserPattern = regexp.MustCompile(`(?m)\A\s*^- #FILENAME (?P<file>\S+$)(\n^\t- \s*(?P<sentence>.*?)\s*$)?(?P<words>(\n^\t- \S+\s*#\[\[Jp Words]]$\n^\t\t- .*$\n^\t\t- .*$)*)\s*\z`)
+var jpSentencesVoiceParserPattern = regexp.MustCompile(`(?m)\A\s*^- (?P<files>(#FILENAME \S+\s*)+)$(\n^\t- \s*(?P<sentence>.*?)\s*$)?(?P<words>(\n^\t- \S+\s*#\[\[Jp Words]]$\n^\t\t- .*$\n^\t\t- .*$)*)\s*\z`)
 
 type JPSentencesVoiceParser struct {
 	baseParser
 }
 
 type jPSentencesVoiceMiddleInfo struct {
-	filePath string
+	filePaths []string
 }
 
 func (J JPSentencesVoiceParser) Match(note string, noteType *common.NoteInfo) bool {
@@ -54,16 +54,11 @@ func (J JPSentencesVoiceParser) MiddleParse(note string, noteType *common.NoteIn
 	submatches := jpSentencesVoiceParserPattern.FindStringSubmatch(notePreproc)
 
 	sentence := submatches[jpSentencesVoiceParserPattern.SubexpIndex("sentence")]
-	fileName := submatches[jpSentencesVoiceParserPattern.SubexpIndex("file")]
-	var filePath string
-	filePath1 := path.Join(config.Conf.ResourceFolder, fileName)
-	filePath2 := path.Join(getProcessedVoiceLocation(), fileName)
-	if common.FileExists(filePath1) {
-		filePath = filePath1
-	} else if common.FileExists(filePath2) {
-		filePath = filePath2
-	} else {
-		return nil, fmt.Errorf("resource file %s not exist", filePath)
+	fileNamesPart := submatches[jpSentencesVoiceParserPattern.SubexpIndex("files")]
+	fileNames := regexp.MustCompile(`\s*#FILENAME\s*`).Split(fileNamesPart, -1)
+	filePaths, err := computeFileLocation(fileNames)
+	if err != nil {
+		return nil, err
 	}
 
 	wordsRaw := submatches[jpSentencesVoiceParserPattern.SubexpIndex("words")]
@@ -98,35 +93,40 @@ func (J JPSentencesVoiceParser) MiddleParse(note string, noteType *common.NoteIn
 		Sentence: sentence, JPWords: &words,
 	}
 
-	jpSentence.SetMiddleInfo(&jPSentencesVoiceMiddleInfo{filePath: filePath})
+	jpSentence.SetMiddleInfo(&jPSentencesVoiceMiddleInfo{filePaths: filePaths})
 	return &jpSentence, nil
+}
+
+func computeFileLocation(fileNames []string) ([]string, error) {
+	fileNames = lo.Compact(fileNames)
+	var merr *multierror.Error
+	res := lo.Map(
+		fileNames, func(fileName string, _ int) string {
+			var filePath string
+			filePath1 := path.Join(config.Conf.ResourceFolder, fileName)
+			filePath2 := path.Join(getProcessedVoiceLocation(), fileName)
+			if common.FileExists(filePath1) {
+				filePath = filePath1
+			} else if common.FileExists(filePath2) {
+				filePath = filePath2
+			} else {
+				merr = multierror.Append(merr, fmt.Errorf("resource file %s not exist", fileName))
+			}
+			return filePath
+		},
+	)
+	return res, merr.ErrorOrNil()
+
 }
 
 func (J JPSentencesVoiceParser) PostParse(iModel model.IModel) (model.IModel, error) {
 	jpSentence := iModel.(*model.JPSentence)
 	middleInfo := jpSentence.GetMiddleInfo().(*jPSentencesVoiceMiddleInfo)
-	filePath := middleInfo.filePath
-	data, err := os.ReadFile(filePath)
+	resources, err := processFilePaths(middleInfo.filePaths)
 	if err != nil {
-		return nil, fmt.Errorf("read file %s failed, %s", filePath, err.Error())
+		return nil, err
 	}
-	filename := path.Base(filePath)
-	filename = strings.Replace(filename, "[", "(", -1)
-	filename = strings.Replace(filename, "]", ")", -1)
-	resource := &model.Resource{
-		Metadata: model.ResourceMetadata{
-			FileName: filename, ResourceType: model.Sound, ExtName: ".mp3",
-		},
-	}
-	resource.SetData(data)
-
-	jpSentence.SetResources(&[]model.Resource{*resource})
-
-	err = moveVoiceFile(filePath)
-	if err != nil {
-		log.Printf("warning: move %s failed, %s\n", filePath, err.Error())
-	}
-
+	jpSentence.SetResources(resources)
 	return jpSentence, nil
 }
 
@@ -156,6 +156,35 @@ func moveVoiceFile(filePath string) error {
 		}
 	}
 	return nil
+}
+
+func processFilePaths(filePaths []string) (*[]model.Resource, error) {
+	var merr *multierror.Error
+	resources := lo.Map(
+		filePaths, func(filePath string, _ int) model.Resource {
+			data, err := os.ReadFile(filePath)
+			if err != nil {
+				merr = multierror.Append(
+					merr, fmt.Errorf("read file %s failed, %s", filePath, err.Error()),
+				)
+			}
+			filename := path.Base(filePath)
+			filename = strings.Replace(filename, "[", "(", -1)
+			filename = strings.Replace(filename, "]", ")", -1)
+			resource := &model.Resource{
+				Metadata: model.ResourceMetadata{
+					FileName: filename, ResourceType: model.Sound, ExtName: ".mp3",
+				},
+			}
+			resource.SetData(data)
+			err = moveVoiceFile(filePath)
+			if err != nil {
+				log.Printf("warning: move %s failed, %s\n", filePath, err.Error())
+			}
+			return *resource
+		},
+	)
+	return &resources, merr.ErrorOrNil()
 }
 
 func getProcessedVoiceLocation() string {
