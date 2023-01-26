@@ -55,6 +55,7 @@ func (J JPSentencesVoiceParser) MiddleParse(note string, noteType *common.NoteIn
 
 	sentence := submatches[jpSentencesVoiceParserPattern.SubexpIndex("sentence")]
 	fileNamesPart := submatches[jpSentencesVoiceParserPattern.SubexpIndex("files")]
+	fileNamesPart = strings.TrimSpace(fileNamesPart)
 	fileNames := regexp.MustCompile(`\s*#FILENAME\s*`).Split(fileNamesPart, -1)
 	filePaths, err := computeFileLocation(fileNames)
 	if err != nil {

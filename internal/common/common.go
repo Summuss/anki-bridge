@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/hashicorp/go-multierror"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"os/exec"
@@ -54,6 +55,10 @@ func FileExists(filename string) bool {
 	info, err := os.Stat(filename)
 	if os.IsNotExist(err) {
 		return false
+	}
+	if err != nil {
+		log.Println("filename:" + filename)
+		panic(err)
 	}
 	return !info.IsDir()
 }

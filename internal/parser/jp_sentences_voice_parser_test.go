@@ -126,6 +126,25 @@ func TestJPSentencesVoiceParser_Parse(t *testing.T) {
 			want:    nil,
 			wantErr: true,
 		},
+		{
+			name: "only file",
+			args: args{
+				note: `
+- #FILENAME [2023-01-25][01-12-05].mp3 #FILENAME [2023-01-25][01-13-09].mp3
+`,
+			},
+			want: &model.JPSentence{
+				Sentence: ``,
+				JPWords:  &[]*model.JPWord{},
+			},
+			wantErr: false,
+			wantMiddleInfo: &jPSentencesVoiceMiddleInfo{
+				filePaths: []string{
+					"D:\\Documents\\voice-records/[2023-01-25][01-12-05].mp3",
+					"D:\\Documents\\voice-records/[2023-01-25][01-13-09].mp3",
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(
