@@ -1,11 +1,13 @@
 package cmd
 
 import (
+	"context"
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/cobra"
 	"golang.design/x/clipboard"
 	"log"
 	"path/filepath"
+	"strings"
 )
 
 func init() {
@@ -19,52 +21,66 @@ var listenFolderCMD = &cobra.Command{
 		return nil
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		go listenClipboard()
+		folder := ""
 		if len(args) > 0 {
-			return listen(args[0])
+			folder = args[0]
 		} else {
-			return listen("D:\\Documents\\voice-records")
+			folder = "D:\\Documents\\voice-records"
 		}
+		go listen(folder)
+		<-make(chan struct{})
+		return nil
 	},
 }
 
-func listen(folder string) (merr error) {
+func listenClipboard() {
+	watch := clipboard.Watch(context.TODO(), clipboard.FmtText)
+	pre := ""
+	for {
+		data := <-watch
+		txt := string(data)
+		if txt != pre {
+			txt = strings.Replace(txt, "\n", "", -1)
+			txt = strings.Replace(txt, "\r", "", -1)
+			clipboard.Write(clipboard.FmtText, []byte(txt))
+			pre = txt
+		}
+	}
+}
+
+func listen(folder string) {
 	err := clipboard.Init()
 	if err != nil {
 		panic(err)
 	}
 
 	watcher, err := fsnotify.NewWatcher()
-	if merr != nil {
-		return err
+	if err != nil {
+		panic(err)
 	}
 	defer watcher.Close()
-
-	go func() {
-		for {
-			select {
-			case event, ok := <-watcher.Events:
-				if !ok {
-					return
-				}
-				if event.Has(fsnotify.Create) {
-					filename := filepath.Base(event.Name)
-					clipboard.Write(clipboard.FmtText, []byte("#FILENAME "+filename))
-				}
-				log.Println(event)
-			case err, ok := <-watcher.Errors:
-				if !ok {
-					return
-				}
-				log.Println("error:", err)
-
-			}
-		}
-	}()
 	err = watcher.Add(folder)
 	if err != nil {
-		return err
+		panic(err)
 	}
-	<-make(chan struct{})
+	for {
+		select {
+		case event, ok := <-watcher.Events:
+			if !ok {
+				return
+			}
+			if event.Has(fsnotify.Create) {
+				filename := filepath.Base(event.Name)
+				clipboard.Write(clipboard.FmtText, []byte("#FILENAME "+filename))
+			}
+			log.Println(event)
+		case err, ok := <-watcher.Errors:
+			if !ok {
+				return
+			}
+			log.Println("error:", err)
 
-	return nil
+		}
+	}
 }
