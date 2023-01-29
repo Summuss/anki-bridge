@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/cobra"
+	"github.com/summuss/anki-bridge/internal/parser"
 	"golang.design/x/clipboard"
 	"log"
 	"path/filepath"
@@ -40,7 +41,7 @@ func listenClipboard() {
 	for {
 		data := <-watch
 		txt := string(data)
-		if txt != pre {
+		if txt != pre && !parser.JPWordPattern.MatchString(txt) {
 			txt = strings.Replace(txt, "\n", "", -1)
 			txt = strings.Replace(txt, "\r", "", -1)
 			clipboard.Write(clipboard.FmtText, []byte(txt))

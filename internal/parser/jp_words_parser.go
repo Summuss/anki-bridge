@@ -22,6 +22,8 @@ type JPWordsParser struct {
 	baseParser
 }
 
+var JPWordPattern = regexp.MustCompile(`(?m)\A\s*^-\s*(?P<word>\S+.*)$\n^\t-\s*(?P<meaning>\S+.*)$\n^\t-\s*(?P<hiragana>\S+)\s+(?P<pitch>\S)\s+(?P<classes>.+)$\s*\z`)
+
 func (w JPWordsParser) Match(note string, noteType *common.NoteInfo) bool {
 	return slices.Contains(
 		[]common.NoteTypeName{
@@ -32,12 +34,11 @@ func (w JPWordsParser) Match(note string, noteType *common.NoteInfo) bool {
 
 func (w JPWordsParser) MiddleParse(note string, noteType *common.NoteInfo) (model.IModel, error) {
 	notePreproc := common.PreprocessNote(note)
-	r, _ := regexp.Compile(`(?m)\A\s*^-\s*(?P<word>\S+.*)$\n^\t-\s*(?P<meaning>\S+.*)$\n^\t-\s*(?P<hiragana>\S+)\s+(?P<pitch>\S)\s+(?P<classes>.+)$\s*\z`)
-	if !r.MatchString(notePreproc) {
+	if !JPWordPattern.MatchString(notePreproc) {
 		return nil, fmt.Errorf("synatx error in word\n%s", note)
 	}
-	submatches := r.FindStringSubmatch(notePreproc)
-	classesStr := submatches[r.SubexpIndex("classes")]
+	submatches := JPWordPattern.FindStringSubmatch(notePreproc)
+	classesStr := submatches[JPWordPattern.SubexpIndex("classes")]
 	classes := common.SplitWithTrimAndOmitEmpty(classesStr, " ")
 	if len(classes) == 0 {
 		return nil, fmt.Errorf("word classes not found in word\n%s", note)
@@ -48,10 +49,10 @@ func (w JPWordsParser) MiddleParse(note string, noteType *common.NoteInfo) (mode
 			return nil, fmt.Errorf("%s in word\n%s", err.Error(), note)
 		}
 	}
-	word := submatches[r.SubexpIndex("word")]
-	meaning := submatches[r.SubexpIndex("meaning")]
-	hiragana := submatches[r.SubexpIndex("hiragana")]
-	pitch := submatches[r.SubexpIndex("pitch")]
+	word := submatches[JPWordPattern.SubexpIndex("word")]
+	meaning := submatches[JPWordPattern.SubexpIndex("meaning")]
+	hiragana := submatches[JPWordPattern.SubexpIndex("hiragana")]
+	pitch := submatches[JPWordPattern.SubexpIndex("pitch")]
 	classes_int := lo.Map(
 		classes, func(item string, _ int) int {
 			res, _ := strconv.ParseInt(item, 16, 32)
