@@ -1,6 +1,6 @@
 ---
 real-mode: false
-disable-duplication-check: off
+disable-duplication-check: on
 mongo-connect-url: "mongodb://mongoadmin:secret@daemon:27017/test?authSource=admin"
 db-name: test
 anki-api-url: "http://localhost:8766"
@@ -35,4 +35,8 @@ note-info:
     title: Jp Sentences Audio
     desk: Japanese::JPSentencesVoice
     anki-note-model: BasicTwoSide
+  JPCommonNotes:
+    title: Jp Note
+    desk: Japanese::Common
+    anki-note-model: BackAnswerHidden
 
