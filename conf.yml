@@ -13,6 +13,8 @@ tts-cmd:
   - E:\Code\Go\anki-bridge\oddcast_api.js
 
 resource-folder: D:\Documents\voice-records
+kindle-copy-suffix:
+  - 喜多川泰.*
 
 note-info:
   JPWords:

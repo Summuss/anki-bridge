@@ -3,11 +3,14 @@ package cmd
 import (
 	"context"
 	"github.com/fsnotify/fsnotify"
+	"github.com/samber/lo"
 	"github.com/spf13/cobra"
+	"github.com/summuss/anki-bridge/internal/config"
 	"github.com/summuss/anki-bridge/internal/parser"
 	"golang.design/x/clipboard"
 	"log"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
 
@@ -44,6 +47,14 @@ func listenClipboard() {
 		if txt != pre && !parser.JPWordPattern.MatchString(txt) {
 			txt = strings.Replace(txt, "\n", "", -1)
 			txt = strings.Replace(txt, "\r", "", -1)
+			if len(config.Conf.KindCopySuffix) > 0 {
+				lo.ForEach(
+					config.Conf.KindCopySuffix, func(item string, index int) {
+						txt = regexp.MustCompile(item).ReplaceAllString(txt, "")
+						txt = strings.Replace(txt, " ", "", -1)
+					},
+				)
+			}
 			clipboard.Write(clipboard.FmtText, []byte(txt))
 			pre = txt
 		}

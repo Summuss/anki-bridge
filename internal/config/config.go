@@ -53,6 +53,7 @@ type Config struct {
 	DisableDuplicationCheck bool                                      `yaml:"disable-duplication-check"`
 	ResourceFolder          string                                    `yaml:"resource-folder"`
 	NoteInfo                map[common.NoteTypeName]map[string]string `yaml:"note-info"`
+	KindCopySuffix          []string                                  `yaml:"kindle-copy-suffix"`
 
 	noteInfoCacheByName  map[common.NoteTypeName]*common.NoteInfo
 	noteInfoCacheByTitle map[string]*common.NoteInfo
