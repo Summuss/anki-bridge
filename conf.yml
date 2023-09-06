@@ -41,4 +41,9 @@ note-info:
     title: Jp Note
     desk: Japanese::Common
     anki-note-model: BackAnswerHidden
+  JpListenMoji:
+    title: JpListenMoji
+    desk: Japanese::Listen
+    anki-note-model: BackAnswerHidden
+
 

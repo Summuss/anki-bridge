@@ -1,9 +1,13 @@
 package anki
 
 import (
+	"fmt"
+	"github.com/samber/lo"
+	"golang.design/x/clipboard"
 	"io"
 	"net/http"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -77,5 +81,43 @@ func TestGetAllAnkiModels(t *testing.T) {
 	}
 	if len(models) == 0 {
 		t.Error("size=0")
+	}
+}
+
+func TestAddN1Card(t *testing.T) {
+	pastedText := string(clipboard.Read(clipboard.FmtText))
+	elems := strings.Split(pastedText, " ")
+	elems = lo.Filter(
+		elems, func(item string, index int) bool {
+			return len(item) > 0
+		},
+	)
+	cards := lo.Map(
+		elems, func(item string, index int) *Card {
+			var front, back string
+			if strings.Contains(item, "・") {
+				splits := strings.Split(item, "・")
+				front = splits[0]
+				back = splits[1]
+			} else {
+				front = item
+				back = ""
+			}
+			return &Card{
+				Collection:    "N1",
+				ModelID:       item,
+				Front:         front,
+				Back:          back,
+				Desk:          "Japanese::N1",
+				AnkiNoteModel: "BasicTwoSide",
+			}
+		},
+	)
+	for _, card := range cards {
+		fmt.Printf("add %s\n", card.Front)
+		err := AddCard(card)
+		if err != nil {
+			panic(err)
+		}
 	}
 }

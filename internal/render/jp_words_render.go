@@ -2,7 +2,6 @@ package render
 
 import (
 	"bytes"
-	"fmt"
 	"github.com/samber/lo"
 	"github.com/summuss/anki-bridge/internal/anki"
 	"github.com/summuss/anki-bridge/internal/common"
@@ -125,15 +124,6 @@ func renderWordClasses(wcs []int) string {
 		},
 	)
 	return strings.Join(res, "・")
-}
-func renderSounds(rs *[]model.Resource) string {
-	var t []string
-	size := len(*rs)
-	for i := 0; i < size; i++ {
-		fileName := (*rs)[i].Metadata.FileName
-		t = append(t, fmt.Sprintf("[sound:%s]", fileName))
-	}
-	return strings.Join(t, " ")
 }
 
 func (j jpWordsRender) Match(m model.IModel) bool {

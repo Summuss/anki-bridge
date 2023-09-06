@@ -6,6 +6,7 @@ import (
 	"github.com/summuss/anki-bridge/internal/config"
 	"github.com/summuss/anki-bridge/internal/model"
 	"reflect"
+	"strings"
 )
 
 var renderList []iRender
@@ -29,4 +30,13 @@ func Render(m model.IModel) (*anki.Card, error) {
 		"can't find render for model type %s", reflect.ValueOf(m).Type().Elem().Name(),
 	)
 
+}
+func renderSounds(rs *[]model.Resource) string {
+	var t []string
+	size := len(*rs)
+	for i := 0; i < size; i++ {
+		fileName := (*rs)[i].Metadata.FileName
+		t = append(t, fmt.Sprintf("[sound:%s]", fileName))
+	}
+	return strings.Join(t, " ")
 }

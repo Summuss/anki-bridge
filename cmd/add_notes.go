@@ -101,6 +101,39 @@ func addNotes(text string) error {
 	if err != nil {
 		return fmt.Errorf("parse error:\n %s", err.Error())
 	}
+	return addModels(ms)
+}
+func backupDB() error {
+	if len(config.Conf.BackupCmd) == 0 {
+		return fmt.Errorf("backup db failed: backup-cmd not found")
+
+	}
+	timeFormat := "2006-01-02#15:04:05"
+	dictionaryName := time.Now().Format(timeFormat)
+	for _, cmd := range config.Conf.BackupCmd {
+		cmd = lo.Map(
+			cmd, func(item string, _ int) string {
+				return strings.ReplaceAll(item, "$1", dictionaryName)
+			},
+		)
+		_, err := common.Exec(cmd[0], cmd[1:]...)
+		if err != nil {
+			return fmt.Errorf("backup db failed, %s", err.Error())
+		}
+
+	}
+	log.Println("backup db successfully")
+	return nil
+
+	/*	backup_dest_in_container := "/data/db/bak/{dest}"
+
+		cmd := "docker exec mongo mongodump  -d anki -u {MONGO_USER} -p {MONGO_PASSWD} --authenticationDatabase admin  -o {backup_dest_in_container}"
+		run_remote_cmd(cmd)
+		run_remote_cmd("mv /home/summus/docker-data/mongodb/bak/{dest} /home/summus/bak/mongo")
+	*/
+}
+func addModels(ms *[]model.IModel) error {
+	var err error
 	size := len(*ms)
 	insertCh := make(chan interface{}, size)
 	skipCh := make(chan interface{}, size)
@@ -172,34 +205,4 @@ func addNotes(text string) error {
 	}
 	log.Printf("insert/skip/total: %d/%d/%d\n", insertNum, skipNum, size)
 	return err
-
-}
-func backupDB() error {
-	if len(config.Conf.BackupCmd) == 0 {
-		return fmt.Errorf("backup db failed: backup-cmd not found")
-
-	}
-	timeFormat := "2006-01-02#15:04:05"
-	dictionaryName := time.Now().Format(timeFormat)
-	for _, cmd := range config.Conf.BackupCmd {
-		cmd = lo.Map(
-			cmd, func(item string, _ int) string {
-				return strings.ReplaceAll(item, "$1", dictionaryName)
-			},
-		)
-		_, err := common.Exec(cmd[0], cmd[1:]...)
-		if err != nil {
-			return fmt.Errorf("backup db failed, %s", err.Error())
-		}
-
-	}
-	log.Println("backup db successfully")
-	return nil
-
-	/*	backup_dest_in_container := "/data/db/bak/{dest}"
-
-		cmd := "docker exec mongo mongodump  -d anki -u {MONGO_USER} -p {MONGO_PASSWD} --authenticationDatabase admin  -o {backup_dest_in_container}"
-		run_remote_cmd(cmd)
-		run_remote_cmd("mv /home/summus/docker-data/mongodb/bak/{dest} /home/summus/bak/mongo")
-	*/
 }

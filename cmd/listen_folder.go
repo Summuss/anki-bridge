@@ -50,8 +50,11 @@ func listenClipboard() {
 			if len(config.Conf.KindCopySuffix) > 0 {
 				lo.ForEach(
 					config.Conf.KindCopySuffix, func(item string, index int) {
-						txt = regexp.MustCompile(item).ReplaceAllString(txt, "")
-						txt = strings.Replace(txt, " ", "", -1)
+						reg := regexp.MustCompile(item)
+						if reg.MatchString(txt) {
+							txt = reg.ReplaceAllString(txt, "")
+							txt = strings.Replace(txt, " ", "", -1)
+						}
 					},
 				)
 			}

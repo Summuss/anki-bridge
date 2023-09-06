@@ -36,6 +36,7 @@ const (
 	NoteType_Kanji_Name             NoteTypeName = "Kanji"
 	NoteType_JPSentences_Voice_Name NoteTypeName = "JPSentencesVoice"
 	NoteType_JPCommonNotes_Name     NoteTypeName = "JPCommonNotes"
+	NoteType_JpListenMoji_Name      NoteTypeName = "JpListenMoji"
 )
 
 var NoteTypeNameList = []NoteTypeName{
