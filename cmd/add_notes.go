@@ -138,7 +138,7 @@ func addModels(ms *[]model.IModel) error {
 	insertCh := make(chan interface{}, size)
 	skipCh := make(chan interface{}, size)
 	failCh := make(chan interface{}, size)
-	err = common.DoParallel(
+	err = common.DoParallelWithLimitThread(
 		ms, func(m *model.IModel) (e error) {
 			defer func() {
 				if e != nil {
@@ -188,7 +188,7 @@ func addModels(ms *[]model.IModel) error {
 			)
 			insertCh <- struct{}{}
 			return nil
-		},
+		}, 5,
 	)
 	var insertNum int
 	var skipNum int

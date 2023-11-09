@@ -15,7 +15,7 @@ func Test_fetchDataFromMoji(t *testing.T) {
 }
 
 func Test_fetchTTSFromMoji(t *testing.T) {
-	got, err := fetchTTSFromMoji("198990643")
+	got, err := fetchTTSFromMoji("198990643", 0)
 	if err != nil {
 		panic(err)
 	}

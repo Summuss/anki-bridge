@@ -12,6 +12,7 @@ import (
 	"github.com/summuss/anki-bridge/internal/dto"
 	"github.com/summuss/anki-bridge/internal/model"
 	"net/http"
+	"time"
 )
 
 func init() {
@@ -67,35 +68,26 @@ func buildJpListenModel() (*[]*model.JpListen[dto.MojiBookItem], error) {
 		},
 	)
 
-	chCtrl := make(chan interface{}, 1)
-	err = common.DoParallel(
-		&ms, func(t **model.JpListen[dto.MojiBookItem]) error {
-			chCtrl <- struct{}{}
-			data, err := fetchTTSFromMoji((*t).ExtInfo.ObjectId)
-			<-chCtrl
-			if err != nil {
-				return err
-			}
-			resource := model.Resource{
-				Metadata: model.ResourceMetadata{
-					FileName: (*t).ExtInfo.ObjectId + ".mp3", ResourceType: model.Sound,
-					ExtName: ".mp3",
-				},
-			}
-			resource.SetData(*data)
-			resources := []model.Resource{resource}
-			(*t).SetResources(&resources)
-			return nil
-		},
-	)
-	if err != nil {
-		return nil, err
+	for _, t := range ms {
+		data, err := fetchTTSFromMoji((*t).ExtInfo.ObjectId, 0)
+		if err != nil {
+			return nil, err
+		}
+		resource := model.Resource{
+			Metadata: model.ResourceMetadata{
+				FileName: (*t).ExtInfo.ObjectId + ".mp3", ResourceType: model.Sound,
+				ExtName: ".mp3",
+			},
+		}
+		resource.SetData(*data)
+		resources := []model.Resource{resource}
+		(*t).SetResources(&resources)
 	}
 	return &ms, nil
 
 }
 
-func fetchTTSFromMoji(objectId string) (*[]byte, error) {
+func fetchTTSFromMoji(objectId string, retryTimes int) (*[]byte, error) {
 	req := map[string]interface{}{
 		"tarId":           objectId,
 		"tarType":         102,
@@ -117,6 +109,15 @@ func fetchTTSFromMoji(objectId string) (*[]byte, error) {
 		return nil, fmt.Errorf("requestMoji: %s", err.Error())
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusServiceUnavailable {
+		if retryTimes > 5 {
+			return nil, fmt.Errorf("requestMoji: %s", resp.Status)
+		} else {
+			time.Sleep(100 * time.Millisecond)
+			return fetchTTSFromMoji(objectId, retryTimes+1)
+		}
+	}
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("requestMoji: %s", resp.Status)
@@ -171,12 +172,16 @@ func fetchWordsFromMoji() (*[]*dto.MojiBookItem, error) {
 		items, func(e interface{}, i int) *dto.MojiBookItem {
 			item := e.(map[string]interface{})
 			target := item["target"].(map[string]interface{})
+			accent, ok := target["accent"]
+			if !ok {
+				accent = ""
+			}
 			return &dto.MojiBookItem{
 				ObjectId: target["objectId"].(string),
 				Spell:    target["spell"].(string),
 				Excerpt:  target["excerpt"].(string),
 				Pron:     target["pron"].(string),
-				Accent:   target["accent"].(string),
+				Accent:   accent.(string),
 			}
 
 		},
