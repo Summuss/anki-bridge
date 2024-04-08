@@ -1,20 +1,22 @@
 ---
 real-mode: false
 disable-duplication-check: on
-mongo-connect-url: "mongodb://mongoadmin:secret@daemon:27017/test?authSource=admin"
+mongo-connect-url: "mongodb://mongoadmin:secret@localhost:27017/test?authSource=admin"
 db-name: test
-anki-api-url: "http://localhost:8766"
-default-input-file: E:\Code\Go\anki-bridge\input.txt
+anki-api-url: "http://localhost:8765"
+default-input-file: Z:\Code\Go\anki-bridge\input.txt
 backup-cmd:
   - [ ssh,summus@daemon,docker,exec,mongo,mongodump,-d anki,-u mongoadmin,-p secret,--authenticationDatabase admin,-o /data/db/bak/$1 ]
 #  - [ ssh,summus@daemon,mv,/home/summus/docker-data/mongodb/bak/$1, /home/summus/bak/mongo ]
 tts-cmd:
   - E:\SDK\nodejs\node.exe
-  - E:\Code\Go\anki-bridge\oddcast_api.js
+  - Z:\Code\Go\anki-bridge\oddcast_api.js
 
-resource-folder: D:\Documents\voice-records
+resource-folder: D:\voice-resources
 kindle-copy-suffix:
   - 喜多川泰.*
+moji-installation-id: 02f9edb3-c808-47b7-bba0-7290c310a179
+moji-session-token: r:2ceb79f873f631ac16801a5b37db15a3
 
 note-info:
   JPWords:

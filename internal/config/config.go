@@ -36,6 +36,10 @@ func init() {
 			log.Fatalf("resource-folder %s is't a dictionay", Conf.ResourceFolder)
 		}
 	}
+	if Conf.MojiInstallationId == "" || Conf.MojiSessionToken == "" {
+		log.Fatalf("moji installation id or token not found")
+	}
+
 	if !Conf.RealMode {
 		log.Println("warning: test mode on")
 	}
@@ -54,6 +58,8 @@ type Config struct {
 	ResourceFolder          string                                    `yaml:"resource-folder"`
 	NoteInfo                map[common.NoteTypeName]map[string]string `yaml:"note-info"`
 	KindCopySuffix          []string                                  `yaml:"kindle-copy-suffix"`
+	MojiInstallationId      string                                    `yaml:"moji-installation-id"`
+	MojiSessionToken        string                                    `yaml:"moji-session-token"`
 
 	noteInfoCacheByName  map[common.NoteTypeName]*common.NoteInfo
 	noteInfoCacheByTitle map[string]*common.NoteInfo

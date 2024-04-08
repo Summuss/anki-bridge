@@ -94,8 +94,8 @@ func fetchTTSFromMoji(objectId string, retryTimes int) (*[]byte, error) {
 		"voiceId":         "f002",
 		"_ApplicationId":  "E62VyFVLMiW7kvbtVq3p",
 		"_ClientVersion":  "js3.4.1",
-		"_InstallationId": "64ffe1ae-9ce9-4dd6-ae1d-92a30c9ed17f",
-		"_SessionToken":   "r:dff3c9d82ce36077dae7e2ccf39d70aa",
+		"_InstallationId": config.Conf.MojiInstallationId,
+		"_SessionToken":   config.Conf.MojiSessionToken,
 	}
 	jsonStr, err := json.Marshal(req)
 	if err != nil {
@@ -137,14 +137,14 @@ func fetchTTSFromMoji(objectId string, retryTimes int) (*[]byte, error) {
 
 func fetchWordsFromMoji() (*[]*dto.MojiBookItem, error) {
 	req := map[string]interface{}{
-		"count":           30,
+		"count":           50,
 		"fid":             "dM9FRXFvAG",
 		"pageIndex":       1,
 		"sortType":        0,
 		"_ApplicationId":  "E62VyFVLMiW7kvbtVq3p",
 		"_ClientVersion":  "js3.4.1",
-		"_InstallationId": "64ffe1ae-9ce9-4dd6-ae1d-92a30c9ed17f",
-		"_SessionToken":   "r:dff3c9d82ce36077dae7e2ccf39d70aa",
+		"_InstallationId": config.Conf.MojiInstallationId,
+		"_SessionToken":   config.Conf.MojiSessionToken,
 	}
 	jsonStr, err := json.Marshal(req)
 	if err != nil {
@@ -202,8 +202,8 @@ func deleteFromMojiFolder(fid string, tarIds []string) error {
 		},
 		"_ApplicationId":  "E62VyFVLMiW7kvbtVq3p",
 		"_ClientVersion":  "js3.4.1",
-		"_InstallationId": "64ffe1ae-9ce9-4dd6-ae1d-92a30c9ed17f",
-		"_SessionToken":   "r:dff3c9d82ce36077dae7e2ccf39d70aa",
+		"_InstallationId": config.Conf.MojiInstallationId,
+		"_SessionToken":   config.Conf.MojiSessionToken,
 	}
 	jsonStr, err := json.Marshal(req)
 	if err != nil {

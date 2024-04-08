@@ -173,7 +173,7 @@ func addModels(ms *[]model.IModel) error {
 				return fmt.Errorf("write note id back for %s failed,error:\n%s", desc, err.Error())
 			}
 			resources := (*m).GetResources()
-			_ = common.DoParallel(
+			_ = common.DoParallelWithLimitThread(
 				resources, func(r *model.Resource) error {
 					err := anki.StoreMedia(r)
 					if err != nil {
@@ -184,11 +184,11 @@ func addModels(ms *[]model.IModel) error {
 
 					}
 					return nil
-				},
+				}, 1,
 			)
 			insertCh <- struct{}{}
 			return nil
-		}, 5,
+		}, 1,
 	)
 	var insertNum int
 	var skipNum int
